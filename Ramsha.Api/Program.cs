@@ -45,8 +45,8 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 builder.Services.AddRamsha(ramsha =>
 {
     ramsha
-    .AddModule<CommonApplicationModule>()
-    .AddEFPostgreSql()
+    .AddModule<ApplicationModule>()
+    .AddModule<PersistenceModule>()
     .AddModule<AspNetCoreMvcModule>()
     .AddCaching();
 });
@@ -56,8 +56,6 @@ builder.Services.AddAuthorization();
 
 
 builder.Services
-    .AddApplicationLayer(appConfiguration)
-.AddPersistenceInfrastructure(appConfiguration)
 .AddIdentityInfrastructure(appConfiguration)
 .AddFileStorage(appConfiguration)
 .AddEmailServices(appConfiguration)

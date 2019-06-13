@@ -109,14 +109,14 @@ namespace Ramsha.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FirstName = table.Column<string>(type: "text", nullable: false),
                     LastName = table.Column<string>(type: "text", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     Deleted = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    Username = table.Column<string>(type: "text", nullable: false)
+                    Username = table.Column<string>(type: "text", nullable: false),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true),
+                    LastUpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -132,10 +132,10 @@ namespace Ramsha.Persistence.Migrations
                     FirstName = table.Column<string>(type: "text", nullable: false),
                     LastName = table.Column<string>(type: "text", nullable: false),
                     Username = table.Column<string>(type: "text", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true),
+                    LastUpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     Deleted = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
@@ -166,10 +166,10 @@ namespace Ramsha.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FirstName = table.Column<string>(type: "text", nullable: false),
                     LastName = table.Column<string>(type: "text", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true),
+                    LastUpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     Deleted = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<Guid>(type: "uuid", nullable: true),
@@ -220,17 +220,17 @@ namespace Ramsha.Persistence.Migrations
                     Status = table.Column<int>(type: "integer", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uuid", nullable: false),
                     BrandId = table.Column<Guid>(type: "uuid", nullable: true),
-                    SeoSettings_MetaTitle = table.Column<string>(type: "text", nullable: true),
-                    SeoSettings_MetaDescription = table.Column<string>(type: "text", nullable: true),
-                    SeoSettings_Keywords = table.Column<string>(type: "text", nullable: true),
-                    SeoSettings_UrlSlug = table.Column<string>(type: "text", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true),
+                    LastUpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     Deleted = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true)
+                    DeletedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    SeoSettings_Keywords = table.Column<string>(type: "text", nullable: true),
+                    SeoSettings_MetaDescription = table.Column<string>(type: "text", nullable: true),
+                    SeoSettings_MetaTitle = table.Column<string>(type: "text", nullable: true),
+                    SeoSettings_UrlSlug = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -287,19 +287,19 @@ namespace Ramsha.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
                     PaymentIntentId = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_FullName = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_Description = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_Display = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_City = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_Country = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_State = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_Zip = table.Column<string>(type: "text", nullable: false),
-                    ShippingAddress_Latitude = table.Column<double>(type: "double precision", nullable: false),
-                    ShippingAddress_Longitude = table.Column<double>(type: "double precision", nullable: false),
                     OrderDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Subtotal = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
                     DeliveryFee = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
-                    OrderStatus = table.Column<int>(type: "integer", nullable: false)
+                    OrderStatus = table.Column<int>(type: "integer", nullable: false),
+                    ShippingAddress_City = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddress_Country = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddress_Description = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddress_Display = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddress_FullName = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddress_Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    ShippingAddress_Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    ShippingAddress_State = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddress_Zip = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -455,10 +455,10 @@ namespace Ramsha.Persistence.Migrations
                     ImageUrl = table.Column<string>(type: "text", nullable: true),
                     Weight = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
                     IsDefault = table.Column<bool>(type: "boolean", nullable: false),
-                    LengthDimension = table.Column<decimal>(type: "numeric", nullable: false),
-                    WidthDimension = table.Column<decimal>(type: "numeric", nullable: false),
-                    HeightDimension = table.Column<decimal>(type: "numeric", nullable: false),
-                    DimensionalFactor = table.Column<decimal>(type: "numeric", nullable: false)
+                    DimensionalFactor = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
+                    HeightDimension = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
+                    LengthDimension = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
+                    WidthDimension = table.Column<decimal>(type: "numeric(18,6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -501,7 +501,7 @@ namespace Ramsha.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "FulfillmentRequest",
+                name: "FulfillmentRequests",
                 schema: "Core",
                 columns: table => new
                 {
@@ -517,22 +517,22 @@ namespace Ramsha.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_FulfillmentRequest", x => x.Id);
+                    table.PrimaryKey("PK_FulfillmentRequests", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FulfillmentRequest_DeliveryAgents_DeliveryAgentId",
+                        name: "FK_FulfillmentRequests_DeliveryAgents_DeliveryAgentId",
                         column: x => x.DeliveryAgentId,
                         principalSchema: "Core",
                         principalTable: "DeliveryAgents",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_FulfillmentRequest_Orders_OrderId",
+                        name: "FK_FulfillmentRequests_Orders_OrderId",
                         column: x => x.OrderId,
                         principalSchema: "Core",
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_FulfillmentRequest_Suppliers_SupplierId",
+                        name: "FK_FulfillmentRequests_Suppliers_SupplierId",
                         column: x => x.SupplierId,
                         principalSchema: "Core",
                         principalTable: "Suppliers",
@@ -546,14 +546,14 @@ namespace Ramsha.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ItemSupplied_ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ItemSupplied_ProductVariantId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ItemSupplied_Name = table.Column<string>(type: "text", nullable: false),
-                    ItemSupplied_ImageUrl = table.Column<string>(type: "text", nullable: true),
-                    ItemSupplied_Sku = table.Column<string>(type: "text", nullable: false),
                     WholesalePrice = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
-                    SupplyId = table.Column<Guid>(type: "uuid", nullable: true)
+                    SupplyId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ItemSupplied_ImageUrl = table.Column<string>(type: "text", nullable: true),
+                    ItemSupplied_Name = table.Column<string>(type: "text", nullable: false),
+                    ItemSupplied_ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ItemSupplied_ProductVariantId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ItemSupplied_Sku = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -657,24 +657,24 @@ namespace Ramsha.Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ItemOrdered_InventoryItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ItemOrdered_Name = table.Column<string>(type: "text", nullable: false),
-                    ItemOrdered_InventorySKU = table.Column<string>(type: "text", nullable: false),
-                    ItemOrdered_PictureUrl = table.Column<string>(type: "text", nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
                     FulfillmentRequestId = table.Column<Guid>(type: "uuid", nullable: false),
                     Price = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
                     Markup = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false)
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    ItemOrdered_InventoryItemId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ItemOrdered_InventorySKU = table.Column<string>(type: "text", nullable: false),
+                    ItemOrdered_Name = table.Column<string>(type: "text", nullable: false),
+                    ItemOrdered_PictureUrl = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OrderItem", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OrderItem_FulfillmentRequest_FulfillmentRequestId",
+                        name: "FK_OrderItem_FulfillmentRequests_FulfillmentRequestId",
                         column: x => x.FulfillmentRequestId,
                         principalSchema: "Core",
-                        principalTable: "FulfillmentRequest",
+                        principalTable: "FulfillmentRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -701,10 +701,10 @@ namespace Ramsha.Persistence.Migrations
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     ProductVariantId = table.Column<Guid>(type: "uuid", nullable: true),
                     SupplierId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastModifiedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true),
+                    LastUpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     StockSelectionType = table.Column<int>(type: "integer", nullable: false),
                     TotalSales = table.Column<int>(type: "integer", nullable: false),
                     ItemFinalPriceAmount = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
@@ -939,7 +939,8 @@ namespace Ramsha.Persistence.Migrations
                     StockRetailPriceAmount = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
                     StockRetailPriceCurrency = table.Column<int>(type: "integer", nullable: false),
                     StockWholesalePriceAmount = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
-                    StockWholesalePriceCurrency = table.Column<int>(type: "integer", nullable: false)
+                    StockWholesalePriceCurrency = table.Column<int>(type: "integer", nullable: false),
+                    Discounts = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -949,31 +950,6 @@ namespace Ramsha.Persistence.Migrations
                         column: x => x.InventoryItemId,
                         principalSchema: "Core",
                         principalTable: "InventoryItems",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Discount",
-                schema: "Core",
-                columns: table => new
-                {
-                    StockId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Type = table.Column<int>(type: "integer", nullable: false),
-                    Value = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Discount", x => new { x.StockId, x.Id });
-                    table.ForeignKey(
-                        name: "FK_Discount_Stocks_StockId",
-                        column: x => x.StockId,
-                        principalSchema: "Core",
-                        principalTable: "Stocks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -991,21 +967,21 @@ namespace Ramsha.Persistence.Migrations
                 column: "ParentCategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FulfillmentRequest_DeliveryAgentId",
+                name: "IX_FulfillmentRequests_DeliveryAgentId",
                 schema: "Core",
-                table: "FulfillmentRequest",
+                table: "FulfillmentRequests",
                 column: "DeliveryAgentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FulfillmentRequest_OrderId",
+                name: "IX_FulfillmentRequests_OrderId",
                 schema: "Core",
-                table: "FulfillmentRequest",
+                table: "FulfillmentRequests",
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FulfillmentRequest_SupplierId",
+                name: "IX_FulfillmentRequests_SupplierId",
                 schema: "Core",
-                table: "FulfillmentRequest",
+                table: "FulfillmentRequests",
                 column: "SupplierId");
 
             migrationBuilder.CreateIndex(
@@ -1162,10 +1138,6 @@ namespace Ramsha.Persistence.Migrations
                 schema: "Core");
 
             migrationBuilder.DropTable(
-                name: "Discount",
-                schema: "Core");
-
-            migrationBuilder.DropTable(
                 name: "OrderItem",
                 schema: "Core");
 
@@ -1183,6 +1155,10 @@ namespace Ramsha.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Ratings",
+                schema: "Core");
+
+            migrationBuilder.DropTable(
+                name: "Stocks",
                 schema: "Core");
 
             migrationBuilder.DropTable(
@@ -1206,15 +1182,15 @@ namespace Ramsha.Persistence.Migrations
                 schema: "Core");
 
             migrationBuilder.DropTable(
-                name: "Stocks",
-                schema: "Core");
-
-            migrationBuilder.DropTable(
-                name: "FulfillmentRequest",
+                name: "FulfillmentRequests",
                 schema: "Core");
 
             migrationBuilder.DropTable(
                 name: "Tags",
+                schema: "Core");
+
+            migrationBuilder.DropTable(
+                name: "InventoryItems",
                 schema: "Core");
 
             migrationBuilder.DropTable(
@@ -1230,10 +1206,6 @@ namespace Ramsha.Persistence.Migrations
                 schema: "Core");
 
             migrationBuilder.DropTable(
-                name: "InventoryItems",
-                schema: "Core");
-
-            migrationBuilder.DropTable(
                 name: "DeliveryAgents",
                 schema: "Core");
 
@@ -1242,11 +1214,11 @@ namespace Ramsha.Persistence.Migrations
                 schema: "Core");
 
             migrationBuilder.DropTable(
-                name: "Options",
+                name: "SupplierVariants",
                 schema: "Core");
 
             migrationBuilder.DropTable(
-                name: "SupplierVariants",
+                name: "Options",
                 schema: "Core");
 
             migrationBuilder.DropTable(

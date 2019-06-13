@@ -22,41 +22,44 @@ public class FulfillmentRequestRepository
 
     public async Task<PaginationResponseDto<FulfillmentRequestDto>> GetPaged(Ramsha.Application.Wrappers.PaginationParams paginationParams, FilterParams? filterParams, SortingParams? sortingParams, Expression<Func<FulfillmentRequest, bool>>? criteria = null)
     {
-        var context = await GetDbContextAsync();
-        var query = context.FulfillmentRequests.AsQueryable();
-
-        if (criteria is not null)
+        return await UnitOfWork<PaginationResponseDto<FulfillmentRequestDto>>(async () =>
         {
-            query = query.Where(criteria);
-        }
+            var context = await GetDbContextAsync();
+            var query = context.FulfillmentRequests.AsQueryable();
 
-        if (sortingParams is not null)
-        {
-            query = query.OrderByColumnName(sortingParams.ColumnsSort);
-        }
-        else
-        {
-            query = query.OrderBy(x => x.Created);
-        }
-
-        if (filterParams is not null)
-        {
-            var globalFilter = filterParams.GlobalFilterValue;
-
-            if (filterParams.ColumnsFilter.HasItems())
+            if (criteria is not null)
             {
-                query = query.FilterByColumn(filterParams.ColumnsFilter);
+                query = query.Where(criteria);
             }
-        }
 
-        var count = await query.CountAsync();
+            if (sortingParams is not null)
+            {
+                query = query.OrderByColumnName(sortingParams.ColumnsSort);
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Created);
+            }
 
-        var pagedResult = await query
-        .Select(p => p.AsFulfillmentRequestDto())
-            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
-            .Take(paginationParams.PageSize)
-            .ToListAsync();
+            if (filterParams is not null)
+            {
+                var globalFilter = filterParams.GlobalFilterValue;
 
-        return new(pagedResult, paginationParams, count);
+                if (filterParams.ColumnsFilter.HasItems())
+                {
+                    query = query.FilterByColumn(filterParams.ColumnsFilter);
+                }
+            }
+
+            var count = await query.CountAsync();
+
+            var pagedResult = await query
+            .Select(p => p.AsFulfillmentRequestDto())
+                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                .Take(paginationParams.PageSize)
+                .ToListAsync();
+
+            return new(pagedResult, paginationParams, count);
+        });
     }
 }

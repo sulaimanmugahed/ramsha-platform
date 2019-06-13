@@ -19,8 +19,11 @@ public class SupplierRepository
 
 	public async Task<Supplier?> FindByUsername(string username)
 	{
-		var context = await GetDbContextAsync();
-		return await context.Suppliers.Include(x => x.Supplies).FirstOrDefaultAsync(x => x.Username == username);
+		return await UnitOfWork(async () =>
+{
+var context = await GetDbContextAsync();
+return await context.Suppliers.Include(x => x.Supplies).FirstOrDefaultAsync(x => x.Username == username);
+});
 	}
 
 }

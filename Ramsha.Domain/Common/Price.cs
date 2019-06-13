@@ -2,12 +2,16 @@
 using Ramsha.Domain.Products.Enums;
 
 namespace Ramsha.Domain.Common;
-public class Price : ValueObject
+
+public record Price
 {
+    private Price()
+    {
+
+    }
     public decimal Amount { get; }
     public CurrencyCode Currency { get; }
 
-    protected Price() { }
 
     public Price(decimal amount, CurrencyCode currency = CurrencyCode.USD)
     {
@@ -29,14 +33,4 @@ public class Price : ValueObject
     }
 
 
-    public override string ToString()
-    {
-        return $"{Amount} {Currency}";
-    }
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return Amount;
-        yield return Currency;
-    }
 }

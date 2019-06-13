@@ -16,8 +16,11 @@ IOptionRepository
 
     public async Task<OptionValue?> GetValue(OptionValueId optionValueId)
     {
-        var context = await GetDbContextAsync();
+        return await UnitOfWork(async () =>
+{
+var context = await GetDbContextAsync();
 
-        return await context.Set<OptionValue>().FirstOrDefaultAsync(x => x.Id == optionValueId);
+return await context.Set<OptionValue>().FirstOrDefaultAsync(x => x.Id == optionValueId);
+});
     }
 }

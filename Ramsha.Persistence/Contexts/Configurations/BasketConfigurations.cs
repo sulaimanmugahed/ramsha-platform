@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace Ramsha.Persistence.Contexts.Configurations;
+
 public class BasketConfigurations : IEntityTypeConfiguration<Basket>
 {
 	public void Configure(EntityTypeBuilder<Basket> builder)
@@ -12,6 +13,7 @@ public class BasketConfigurations : IEntityTypeConfiguration<Basket>
 		builder.ToTable("Baskets", "Core");
 
 		builder.HasKey(x => x.Id);
+
 		builder.Property(x => x.Id)
 			.HasConversion(id => id.Value, value => new BasketId(value));
 

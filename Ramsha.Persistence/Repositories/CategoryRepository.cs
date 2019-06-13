@@ -20,49 +20,63 @@ public class CategoryRepository
 
     public async Task<List<Category>> GetMainCategories()
     {
-        var dbContext = await GetDbContextAsync();
-        return await dbContext.Categories.Where(c => c.ParentCategoryId == null).Include(x => x.SubCategories).ToListAsync();
+        return await UnitOfWork(async () =>
+        {
+            var dbContext = await GetDbContextAsync();
+            return await dbContext.Categories.Where(c => c.ParentCategoryId == null).Include(x => x.SubCategories).ToListAsync();
+        });
     }
 
     public async Task<List<CategoryId>> GetChildCategoryIds(CategoryId categoryId)
     {
-        var dbContext = await GetDbContextAsync();
-        var categoryIds = await dbContext.Categories
-            .Where(c => c.Id == categoryId || c.ParentCategoryId == categoryId)
-            .Select(c => c.Id)
-            .ToListAsync();
+        return await UnitOfWork(async () =>
+        {
+            var dbContext = await GetDbContextAsync();
+            var categoryIds = await dbContext.Categories
+                .Where(c => c.Id == categoryId || c.ParentCategoryId == categoryId)
+                .Select(c => c.Id)
+                .ToListAsync();
 
-        return categoryIds;
+            return categoryIds;
+        });
     }
 
     public async Task<List<CatalogCategoryDto>> GetCatalogCategories()
     {
-        var dbContext = await GetDbContextAsync();
-        var categories = dbContext.Categories
-        .Include(x => x.SubCategories)
-        .Include(x => x.Products)
-        .AsQueryable();
-        return await categories.Select(x => x.AsCatalogCategoryDto()).ToListAsync();
+        return await UnitOfWork(async () =>
+        {
+            var dbContext = await GetDbContextAsync();
+            var categories = dbContext.Categories
+            .Include(x => x.SubCategories)
+            .Include(x => x.Products)
+            .AsQueryable();
+            return await categories.Select(x => x.AsCatalogCategoryDto()).ToListAsync();
+        });
+
     }
 
     public async Task<List<TotalCategoryProducts>> GetTotalMainCategoriesProducts()
     {
-        var dbContext = await GetDbContextAsync();
-        var categories = await dbContext.Categories
-            .Include(x => x.SubCategories)
-            .Include(x => x.Products)
-            .Where(x => x.ParentCategoryId == null)
-            .ToListAsync();
+        return await UnitOfWork(async () =>
+        {
+            var dbContext = await GetDbContextAsync();
+            var categories = await dbContext.Categories
+                .Include(x => x.SubCategories)
+                .Include(x => x.Products)
+                .Where(x => x.ParentCategoryId == null)
+                .ToListAsync();
 
-        var result = categories
-            .Select(x => new TotalCategoryProducts(x.Name, GetTotalProductCount(x)))
-            .ToList();
+            var result = categories
+                .Select(x => new TotalCategoryProducts(x.Name, GetTotalProductCount(x)))
+                .ToList();
 
-        return result;
+            return result;
+        });
     }
 
     private int GetTotalProductCount(Category category)
     {
+
         int totalCount = category.Products.Count;
 
         foreach (var subCategory in category.SubCategories)

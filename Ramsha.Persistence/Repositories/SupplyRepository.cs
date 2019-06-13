@@ -15,52 +15,67 @@ using Ramsha.EntityFrameworkCore;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class SupplyRepository(ApplicationDbContext context)
+public class SupplyRepository
 : EFCoreRepository<ApplicationDbContext, Supply, SupplyId>, ISupplyRepository
 {
-    private DbSet<Supply> _supplies = context.Set<Supply>();
+
 
     public async Task<Supply?> GetWithDetails(Expression<Func<Supply, bool>> criteria)
     {
-        return await _supplies
-        .Include(r => r.Items)
-        .ThenInclude(r => r.ItemSupplied)
-        .SingleOrDefaultAsync(criteria);
+        return await UnitOfWork(async () =>
+{
+    var context = await GetDbContextAsync();
+
+    return await context.Set<Supply>()
+    .Include(r => r.Items)
+    .ThenInclude(r => r.ItemSupplied)
+    .SingleOrDefaultAsync(criteria);
+});
     }
 
     public async Task<IEnumerable<Supply>> FindAllWithDetail(Expression<Func<Supply, bool>> criteria)
     {
-        return await _supplies.Where(criteria).Include(r => r.Items).ToListAsync();
+        return await UnitOfWork(async () =>
+{
+    var context = await GetDbContextAsync();
+
+    return await context.Set<Supply>().Where(criteria).Include(r => r.Items).ToListAsync();
+});
     }
 
     public async Task<PaginationResponseDto<SupplyDto>> GetSuppliesPaged(PagedParams pagedParams, Expression<Func<Supply, bool>>? criteria = null)
     {
-        var suppliesQuery = _supplies.OrderBy(x => x.Status).AsQueryable();
+        return await UnitOfWork<PaginationResponseDto<SupplyDto>>(async () =>
+{
+    var context = await GetDbContextAsync();
 
-        if (criteria is not null)
-            suppliesQuery = suppliesQuery.Where(criteria);
+    var suppliesQuery = context.Set<Supply>().OrderBy(x => x.Status).AsQueryable();
+
+    if (criteria is not null)
+        suppliesQuery = suppliesQuery.Where(criteria);
 
 
-        var sortingColumn = pagedParams.SortingParams?.ColumnsSort;
-        if (sortingColumn.HasItems())
-        {
-            suppliesQuery = suppliesQuery.OrderByColumnName(sortingColumn);
-        }
+    var sortingColumn = pagedParams.SortingParams?.ColumnsSort;
+    if (sortingColumn.HasItems())
+    {
+        suppliesQuery = suppliesQuery.OrderByColumnName(sortingColumn);
+    }
 
-        var filterColumn = pagedParams.FilterParams?.ColumnsFilter;
-        if (filterColumn.HasItems())
-        {
-            suppliesQuery = suppliesQuery.FilterByColumn(filterColumn);
-        }
+    var filterColumn = pagedParams.FilterParams?.ColumnsFilter;
+    if (filterColumn.HasItems())
+    {
+        suppliesQuery = suppliesQuery.FilterByColumn(filterColumn);
+    }
 
-        var count = await suppliesQuery.CountAsync();
-        var paginationParams = pagedParams.PaginationParams;
-        var pagedResult = await suppliesQuery
+    var count = await suppliesQuery.CountAsync();
+    var paginationParams = pagedParams.PaginationParams;
+    var pagedResult = await suppliesQuery
         .Select(p => p.AsSupplyDto())
             .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
             .Take(paginationParams.PageSize)
             .ToListAsync();
 
-        return new(pagedResult, paginationParams, count);
+    return new(pagedResult, paginationParams, count);
+});
     }
 }

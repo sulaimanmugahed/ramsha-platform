@@ -13,6 +13,8 @@ using Ramsha.Domain.Inventory;
 using Ramsha.Domain.Orders;
 using Ramsha.Domain.DeliveryAgents;
 using Ramsha.EntityFrameworkCore;
+using Ramsha.Domain.Baskets;
+using Ramsha.Domain.Customers;
 
 
 namespace Ramsha.Persistence.Contexts;
@@ -78,15 +80,59 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         return result;
     }
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder.Properties<decimal>()
+            .HaveColumnType("decimal(18,6)");
+
+        configurationBuilder.Properties<decimal?>()
+            .HaveColumnType("decimal(18,6)");
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.Ignore<BasketId>();
+        builder.Ignore<CustomerId>();
+        builder.Ignore<ProductId>();
+        builder.Ignore<TagId>();
+        builder.Ignore<OrderId>();
+        builder.Ignore<FulfillmentRequestId>();
+        builder.Ignore<SupplierId>();
+        builder.Ignore<SupplierProductId>();
+        builder.Ignore<SupplierVariantId>();
+        builder.Ignore<SupplyId>();
+        builder.Ignore<SupplyItemId>();
+        builder.Ignore<SupplyRequestId>();
+        builder.Ignore<SupplyRequestItemId>();
+        builder.Ignore<DeliveryAgentId>();
+        builder.Ignore<InventoryItemId>();
+        builder.Ignore<StockId>();
+        builder.Ignore<OptionId>();
+        builder.Ignore<CategoryId>();
+        builder.Ignore<BrandId>();
+        builder.Ignore<CouponId>();
+        builder.Ignore<OptionValueId>();
+        builder.Ignore<ProductVariantId>();
+        builder.Ignore<RatingId>();
 
-        foreach (var property in builder.Model.GetEntityTypes()
-        .SelectMany(t => t.GetProperties())
-        .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
-        {
-            property.SetColumnType("decimal(18,6)");
-        }
+
+
+
+
+
+
+        builder.Ignore<Price>();
+        builder.Ignore<Discount>();
+        builder.Ignore<SeoSettings>();
+        builder.Ignore<ProductItemOrdered>();
+        builder.Ignore<ItemSupplied>();
+        builder.Ignore<ShippingAddress>();
+        builder.Ignore<DimensionalWeight>();
+
+
+
         builder.ApplyConfigurationsFromAssembly(GetType().Assembly);
 
         builder.HasDefaultSchema("Core");
@@ -131,6 +177,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
 
         });
+
+
 
         //tags
 
@@ -377,6 +425,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Stock>(entity =>
         {
+
             entity.HasKey(x => x.Id);
             entity.HasOne<InventoryItem>()
             .WithMany(x => x.Stocks)
@@ -388,6 +437,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ComplexProperty(x => x.WholesalePrice, price =>
                 {
+                    //price.WithOwner();
+
 
                     price.Property(x => x.Amount).HasColumnName("StockWholesalePriceAmount").HasColumnType("decimal(18,6)");
                     price.Property(x => x.Currency).HasColumnName("StockWholesalePriceCurrency");
@@ -395,25 +446,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ComplexProperty(p => p.RetailPrice, price =>
       {
+          // price.WithOwner();
+
 
           price.Property(x => x.Amount).HasColumnName("StockRetailPriceAmount").HasColumnType("decimal(18,6)");
           price.Property(x => x.Currency).HasColumnName("StockRetailPriceCurrency");
       });
 
-            entity.OwnsOne(p => p.FinalPrice, price =>
+            entity.ComplexProperty(p => p.FinalPrice, (price) =>
             {
-                price.WithOwner();
+
+                //price.WithOwner();
 
                 price.Property(x => x.Amount).HasColumnName("StockFinalPriceAmount").HasColumnType("decimal(18,6)");
                 price.Property(x => x.Currency).HasColumnName("StockPriceCurrency");
             });
 
+
             entity
-               .OwnsMany(x => x.Discounts, discount =>
-               {
-                   discount.WithOwner();
-                   discount.Property(x => x.Value).HasColumnType("decimal(18,6)");
-               });
+               .ComplexProperty(x => x.Discounts, x => x.ToJson());
         });
 
 
@@ -424,7 +475,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             builder.HasKey(sri => sri.Id);
             builder.Property(x => x.Id)
             .HasConversion(id => id.Value, value => new SupplyItemId(value));
-            builder.OwnsOne(sri => sri.ItemSupplied, sp =>
+            builder.ComplexProperty(sri => sri.ItemSupplied, sp =>
             {
                 sp.Property(x => x.ProductId)
                .HasConversion(id => id.Value, value => new ProductId(value));
@@ -449,7 +500,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             builder.HasQueryFilter(x => !x.Customer.IsDeleted);
 
-            builder.OwnsOne(x => x.ShippingAddress);
+            builder.ComplexProperty(x => x.ShippingAddress);
         });
 
 
@@ -469,7 +520,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
            .OnDelete(DeleteBehavior.Restrict);
 
 
-            builder.OwnsOne(x => x.ItemOrdered, item =>
+            builder.ComplexProperty(x => x.ItemOrdered, item =>
             {
                 item.Property(i => i.InventoryItemId)
                 .HasConversion(id => id.Value, value => new Domain.Inventory.InventoryItemId(value));
@@ -512,7 +563,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
           .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ProductVariant>()
-        .OwnsOne(x => x.Dimensions, x =>
+        .ComplexProperty(x => x.Dimensions, x =>
         {
             x.Property(x => x.Height).HasColumnName("HeightDimension");
             x.Property(x => x.Width).HasColumnName("WidthDimension");

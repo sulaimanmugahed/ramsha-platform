@@ -64,12 +64,12 @@ const client = (() => {
     );
 
     clientInstance.interceptors.response.use(
-        async (response: AxiosResponse<BaseResult<any>>) => {
+        async (response: AxiosResponse<any>) => {
             //  if (import.meta.env.DEV) await sleep(4000);
 
             const pagination = response.headers['pagination'];
             if (pagination) {
-                response.data.data = new PaginationResponse(response.data.data, JSON.parse(pagination));
+                response.data = new PaginationResponse(response.data, JSON.parse(pagination));
             }
 
             return response;

@@ -13,7 +13,7 @@ using Ramsha.Persistence.Contexts;
 namespace Ramsha.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260529000939_Initial")]
+    [Migration("20260603223451_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -22,7 +22,7 @@ namespace Ramsha.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("Core")
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -92,11 +92,11 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("Deleted")
                         .HasColumnType("timestamp with time zone");
@@ -111,14 +111,14 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastModified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifiedBy")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastUpdateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
                     b.Property<string>("Username")
@@ -179,11 +179,11 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("Deleted")
                         .HasColumnType("timestamp with time zone");
@@ -198,14 +198,14 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastModified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifiedBy")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastUpdateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
                     b.Property<string>("Username")
@@ -225,11 +225,11 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<int>("AvailableQuantity")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
@@ -238,11 +238,8 @@ namespace Ramsha.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastModified")
+                    b.Property<DateTime?>("LastUpdateDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifiedBy")
-                        .HasColumnType("uuid");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
@@ -269,7 +266,10 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<int>("TotalSales")
                         .HasColumnType("integer");
 
-                    b.ComplexProperty<Dictionary<string, object>>("FinalPrice", "Ramsha.Domain.Inventory.Entities.InventoryItem.FinalPrice#Price", b1 =>
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "FinalPrice", "Ramsha.Domain.Inventory.Entities.InventoryItem.FinalPrice#Price", b1 =>
                         {
                             b1.IsRequired();
 
@@ -282,7 +282,7 @@ namespace Ramsha.Persistence.Migrations
                                 .HasColumnName("ItemPriceCurrency");
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("RetailPrice", "Ramsha.Domain.Inventory.Entities.InventoryItem.RetailPrice#Price", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "RetailPrice", "Ramsha.Domain.Inventory.Entities.InventoryItem.RetailPrice#Price", b1 =>
                         {
                             b1.IsRequired();
 
@@ -295,7 +295,7 @@ namespace Ramsha.Persistence.Migrations
                                 .HasColumnName("ItemRetailPriceCurrency");
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("WholesalePrice", "Ramsha.Domain.Inventory.Entities.InventoryItem.WholesalePrice#Price", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "WholesalePrice", "Ramsha.Domain.Inventory.Entities.InventoryItem.WholesalePrice#Price", b1 =>
                         {
                             b1.IsRequired();
 
@@ -332,7 +332,29 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<DateTime>("Supplied")
                         .HasColumnType("timestamp with time zone");
 
-                    b.ComplexProperty<Dictionary<string, object>>("RetailPrice", "Ramsha.Domain.Inventory.Entities.Stock.RetailPrice#Price", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Discounts", "Ramsha.Domain.Inventory.Entities.Stock.Discounts#List<Discount>", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("Capacity");
+
+                            b1.ToJson("Discounts");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "FinalPrice", "Ramsha.Domain.Inventory.Entities.Stock.FinalPrice#Price", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,6)")
+                                .HasColumnName("StockFinalPriceAmount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("integer")
+                                .HasColumnName("StockPriceCurrency");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "RetailPrice", "Ramsha.Domain.Inventory.Entities.Stock.RetailPrice#Price", b1 =>
                         {
                             b1.IsRequired();
 
@@ -345,7 +367,7 @@ namespace Ramsha.Persistence.Migrations
                                 .HasColumnName("StockRetailPriceCurrency");
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("WholesalePrice", "Ramsha.Domain.Inventory.Entities.Stock.WholesalePrice#Price", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "WholesalePrice", "Ramsha.Domain.Inventory.Entities.Stock.WholesalePrice#Price", b1 =>
                         {
                             b1.IsRequired();
 
@@ -402,7 +424,7 @@ namespace Ramsha.Persistence.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("FulfillmentRequest", "Core");
+                    b.ToTable("FulfillmentRequests", "Core");
                 });
 
             modelBuilder.Entity("Ramsha.Domain.Orders.Entities.Order", b =>
@@ -428,6 +450,45 @@ namespace Ramsha.Persistence.Migrations
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,6)");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "ShippingAddress", "Ramsha.Domain.Orders.Entities.Order.ShippingAddress#ShippingAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Description")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Display")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("FullName")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Zip")
+                                .IsRequired()
+                                .HasColumnType("text");
+                        });
 
                     b.HasKey("Id");
 
@@ -458,6 +519,26 @@ namespace Ramsha.Persistence.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "ItemOrdered", "Ramsha.Domain.Orders.Entities.OrderItem.ItemOrdered#ProductItemOrdered", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<Guid>("InventoryItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("InventorySKU")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("PictureUrl")
+                                .IsRequired()
+                                .HasColumnType("text");
+                        });
 
                     b.HasKey("Id");
 
@@ -587,11 +668,11 @@ namespace Ramsha.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("Deleted")
                         .HasColumnType("timestamp with time zone");
@@ -609,11 +690,8 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastModified")
+                    b.Property<DateTime?>("LastUpdateDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifiedBy")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -621,6 +699,30 @@ namespace Ramsha.Persistence.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "SeoSettings", "Ramsha.Domain.Products.Entities.Product.SeoSettings#SeoSettings", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Keywords")
+                                .HasColumnType("text")
+                                .HasColumnName("SeoSettings_Keywords");
+
+                            b1.Property<string>("MetaDescription")
+                                .HasColumnType("text")
+                                .HasColumnName("SeoSettings_MetaDescription");
+
+                            b1.Property<string>("MetaTitle")
+                                .HasColumnType("text")
+                                .HasColumnName("SeoSettings_MetaTitle");
+
+                            b1.Property<string>("UrlSlug")
+                                .HasColumnType("text")
+                                .HasColumnName("SeoSettings_UrlSlug");
+                        });
 
                     b.HasKey("Id");
 
@@ -721,6 +823,27 @@ namespace Ramsha.Persistence.Migrations
 
                     b.Property<decimal>("Weight")
                         .HasColumnType("decimal(18,6)");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Dimensions", "Ramsha.Domain.Products.Entities.ProductVariant.Dimensions#DimensionalWeight", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("DimensionalFactor")
+                                .HasColumnType("decimal(18,6)")
+                                .HasColumnName("DimensionalFactor");
+
+                            b1.Property<decimal>("Height")
+                                .HasColumnType("decimal(18,6)")
+                                .HasColumnName("HeightDimension");
+
+                            b1.Property<decimal>("Length")
+                                .HasColumnType("decimal(18,6)")
+                                .HasColumnName("LengthDimension");
+
+                            b1.Property<decimal>("Width")
+                                .HasColumnType("decimal(18,6)")
+                                .HasColumnName("WidthDimension");
+                        });
 
                     b.HasKey("ProductId", "Id");
 
@@ -823,11 +946,11 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("Deleted")
                         .HasColumnType("timestamp with time zone");
@@ -842,14 +965,14 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastModified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("LastModifiedBy")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastUpdateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
                     b.Property<string>("Username")
@@ -997,6 +1120,28 @@ namespace Ramsha.Persistence.Migrations
                     b.Property<decimal>("WholesalePrice")
                         .HasColumnType("decimal(18,6)");
 
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "ItemSupplied", "Ramsha.Domain.Suppliers.Entities.SupplyItem.ItemSupplied#ItemSupplied", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("ImageUrl")
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<Guid>("ProductId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid?>("ProductVariantId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Sku")
+                                .IsRequired()
+                                .HasColumnType("text");
+                        });
+
                     b.HasKey("Id");
 
                     b.HasIndex("SupplyId");
@@ -1123,63 +1268,6 @@ namespace Ramsha.Persistence.Migrations
                         .HasForeignKey("InventoryItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.OwnsOne("Ramsha.Domain.Common.Price", "FinalPrice", b1 =>
-                        {
-                            b1.Property<Guid>("StockId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("Amount")
-                                .HasColumnType("decimal(18,6)")
-                                .HasColumnName("StockFinalPriceAmount");
-
-                            b1.Property<int>("Currency")
-                                .HasColumnType("integer")
-                                .HasColumnName("StockPriceCurrency");
-
-                            b1.HasKey("StockId");
-
-                            b1.ToTable("Stocks", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StockId");
-                        });
-
-                    b.OwnsMany("Ramsha.Domain.Products.Entities.Discount", "Discounts", b1 =>
-                        {
-                            b1.Property<Guid>("StockId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
-
-                            b1.Property<DateTime>("EndDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<DateTime>("StartDate")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<int>("Type")
-                                .HasColumnType("integer");
-
-                            b1.Property<decimal>("Value")
-                                .HasColumnType("decimal(18,6)");
-
-                            b1.HasKey("StockId", "Id");
-
-                            b1.ToTable("Discount", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StockId");
-                        });
-
-                    b.Navigation("Discounts");
-
-                    b.Navigation("FinalPrice")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ramsha.Domain.Orders.Entities.FulfillmentRequest", b =>
@@ -1213,57 +1301,7 @@ namespace Ramsha.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ramsha.Domain.Orders.Entities.ShippingAddress", "ShippingAddress", b1 =>
-                        {
-                            b1.Property<Guid>("OrderId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Display")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("FullName")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<string>("State")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Zip")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("OrderId");
-
-                            b1.ToTable("Orders", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderId");
-                        });
-
                     b.Navigation("Customer");
-
-                    b.Navigation("ShippingAddress")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ramsha.Domain.Orders.Entities.OrderItem", b =>
@@ -1278,37 +1316,6 @@ namespace Ramsha.Persistence.Migrations
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.OwnsOne("Ramsha.Domain.Orders.Entities.ProductItemOrdered", "ItemOrdered", b1 =>
-                        {
-                            b1.Property<int>("OrderItemId")
-                                .HasColumnType("integer");
-
-                            b1.Property<Guid>("InventoryItemId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("InventorySKU")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PictureUrl")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("OrderItemId");
-
-                            b1.ToTable("OrderItem", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderItemId");
-                        });
-
-                    b.Navigation("ItemOrdered")
                         .IsRequired();
                 });
 
@@ -1346,41 +1353,9 @@ namespace Ramsha.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ramsha.Domain.Products.Entities.SeoSettings", "SeoSettings", b1 =>
-                        {
-                            b1.Property<Guid>("ProductId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Keywords")
-                                .HasColumnType("text")
-                                .HasColumnName("SeoSettings_Keywords");
-
-                            b1.Property<string>("MetaDescription")
-                                .HasColumnType("text")
-                                .HasColumnName("SeoSettings_MetaDescription");
-
-                            b1.Property<string>("MetaTitle")
-                                .HasColumnType("text")
-                                .HasColumnName("SeoSettings_MetaTitle");
-
-                            b1.Property<string>("UrlSlug")
-                                .HasColumnType("text")
-                                .HasColumnName("SeoSettings_UrlSlug");
-
-                            b1.HasKey("ProductId");
-
-                            b1.ToTable("Products", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ProductId");
-                        });
-
                     b.Navigation("Brand");
 
                     b.Navigation("Category");
-
-                    b.Navigation("SeoSettings")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ramsha.Domain.Products.Entities.ProductImage", b =>
@@ -1451,41 +1426,6 @@ namespace Ramsha.Persistence.Migrations
                         .WithMany("Variants")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("Ramsha.Domain.Products.Entities.DimensionalWeight", "Dimensions", b1 =>
-                        {
-                            b1.Property<Guid>("ProductVariantProductId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<Guid>("ProductVariantId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("DimensionalFactor")
-                                .HasColumnType("numeric")
-                                .HasColumnName("DimensionalFactor");
-
-                            b1.Property<decimal>("Height")
-                                .HasColumnType("numeric")
-                                .HasColumnName("HeightDimension");
-
-                            b1.Property<decimal>("Length")
-                                .HasColumnType("numeric")
-                                .HasColumnName("LengthDimension");
-
-                            b1.Property<decimal>("Width")
-                                .HasColumnType("numeric")
-                                .HasColumnName("WidthDimension");
-
-                            b1.HasKey("ProductVariantProductId", "ProductVariantId");
-
-                            b1.ToTable("ProductVariant", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ProductVariantProductId", "ProductVariantId");
-                        });
-
-                    b.Navigation("Dimensions")
                         .IsRequired();
 
                     b.Navigation("Product");
@@ -1616,39 +1556,6 @@ namespace Ramsha.Persistence.Migrations
                     b.HasOne("Ramsha.Domain.Suppliers.Entities.Supply", null)
                         .WithMany("Items")
                         .HasForeignKey("SupplyId");
-
-                    b.OwnsOne("Ramsha.Domain.Suppliers.Entities.ItemSupplied", "ItemSupplied", b1 =>
-                        {
-                            b1.Property<Guid>("SupplyItemId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("ImageUrl")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<Guid>("ProductId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<Guid?>("ProductVariantId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Sku")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("SupplyItemId");
-
-                            b1.ToTable("SupplyItem", "Core");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SupplyItemId");
-                        });
-
-                    b.Navigation("ItemSupplied")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ramsha.Domain.Suppliers.Entities.SupplyRequestItem", b =>

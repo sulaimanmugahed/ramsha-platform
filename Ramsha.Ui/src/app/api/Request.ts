@@ -8,8 +8,8 @@ import { router } from '../router/Routes';
 const request = async <T>(options: AxiosRequestConfig): Promise<T> => {
     try {
         const response = await client(options);
-        const baseResult: BaseResult<T> = response.data
-        return baseResult.data as T;
+       // const baseResult: BaseResult<T> = response.data
+        return response.data as T;
 
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

@@ -5,6 +5,7 @@ using Ramsha.Domain.Products.Entities;
 
 
 namespace Ramsha.Persistence.Contexts.Configurations;
+
 public class ProductConfigurations : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
@@ -39,7 +40,7 @@ public class ProductConfigurations : IEntityTypeConfiguration<Product>
         //   .OnDelete(DeleteBehavior.Cascade);
 
 
-        builder.OwnsOne(p => p.SeoSettings, seo =>
+        builder.ComplexProperty(p => p.SeoSettings, seo =>
         {
             seo.Property(s => s.MetaTitle).HasColumnName("SeoSettings_MetaTitle");
             seo.Property(s => s.MetaDescription).HasColumnName("SeoSettings_MetaDescription");

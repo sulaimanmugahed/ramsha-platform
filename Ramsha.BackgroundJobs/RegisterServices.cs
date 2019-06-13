@@ -18,7 +18,7 @@ public static class RegisterServices
     public static IServiceCollection AddBackgroundJobsServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHangfire(x => x.UsePostgreSqlStorage(
-            configuration.GetConnectionString("DefaultConnection"),
+            configuration.GetConnectionString("Default"),
             new PostgreSqlStorageOptions
             {
                 SchemaName = "BackgroundJobs",

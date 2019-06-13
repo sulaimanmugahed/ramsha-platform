@@ -15,7 +15,10 @@ ICouponRepository
 
     public async Task<Coupon?> GetByCodeAsync(string code)
     {
-        var dbContext = await GetDbContextAsync();
-        return await dbContext.Coupons.SingleOrDefaultAsync(c => c.Code == code);
+        return await UnitOfWork(async () =>
+       {
+           var dbContext = await GetDbContextAsync();
+           return await dbContext.Coupons.SingleOrDefaultAsync(c => c.Code == code);
+       });
     }
 }

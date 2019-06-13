@@ -16,32 +16,38 @@ public class BasketRepository
 
 	public async Task<Basket?> FindByBuyer(string buyer)
 	{
-		var dbContext = await GetDbContextAsync();
-		return await dbContext.Baskets.AsSplitQuery()
-		.Include(b => b.Items)
-		.ThenInclude(x => x.InventoryItem)
-		.FirstOrDefaultAsync(b => b.Buyer == buyer);
+		return await UnitOfWork(async () =>
+	   {
+		   var dbContext = await GetDbContextAsync();
+		   return await dbContext.Baskets.AsSplitQuery()
+			.Include(b => b.Items)
+			.ThenInclude(x => x.InventoryItem)
+			.FirstOrDefaultAsync(b => b.Buyer == buyer);
+	   });
 	}
 
 	public async Task<Basket?> GetDetail(string buyer)
 	{
-		var dbContext = await GetDbContextAsync();
-		return await dbContext.Baskets.AsSplitQuery()
-		.Include(b => b.Items)
+		return await UnitOfWork(async () =>
+	   {
+		   var dbContext = await GetDbContextAsync();
+		   return await dbContext.Baskets.AsSplitQuery()
+			.Include(b => b.Items)
 
-			.ThenInclude(i => i.InventoryItem)
-			.ThenInclude(x => x.ProductVariant)
-			.ThenInclude(x => x.Dimensions)
-			.Include(b => b.Items)
-			.ThenInclude(i => i.InventoryItem)
-			.ThenInclude(x => x.Supplier)
-			.Include(b => b.Items)
-			.ThenInclude(i => i.InventoryItem)
-			.ThenInclude(i => i.Stocks)
-			.Include(b => b.Items)
-			.ThenInclude(i => i.InventoryItem)
-			.ThenInclude(i => i.SupplierVariant)
-			.FirstOrDefaultAsync(b => b.Buyer == buyer);
+				.ThenInclude(i => i.InventoryItem)
+				.ThenInclude(x => x.ProductVariant)
+				.ThenInclude(x => x.Dimensions)
+				.Include(b => b.Items)
+				.ThenInclude(i => i.InventoryItem)
+				.ThenInclude(x => x.Supplier)
+				.Include(b => b.Items)
+				.ThenInclude(i => i.InventoryItem)
+				.ThenInclude(i => i.Stocks)
+				.Include(b => b.Items)
+				.ThenInclude(i => i.InventoryItem)
+				.ThenInclude(i => i.SupplierVariant)
+				.FirstOrDefaultAsync(b => b.Buyer == buyer);
+	   });
 	}
 
 
