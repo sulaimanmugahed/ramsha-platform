@@ -1,8 +1,10 @@
 
 
+using Ramsha.Common.Domain;
+
 namespace Ramsha.Domain.Suppliers.Entities;
 
-public class SupplyItem
+public class SupplyItem : Entity<SupplyItemId>
 {
     public SupplyItem()
     {
@@ -21,7 +23,6 @@ public class SupplyItem
         return new SupplyItem(new SupplyItemId(Guid.NewGuid()), itemSupplied, wholesalePrice, quantity);
     }
 
-    public SupplyItemId Id { get; set; }
     public ItemSupplied ItemSupplied { get; set; }
     public decimal WholesalePrice { get; set; }
     public int Quantity { get; set; }

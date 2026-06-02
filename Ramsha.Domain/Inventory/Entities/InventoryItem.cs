@@ -1,4 +1,5 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory.Enums;
 using Ramsha.Domain.Inventory.Events;
@@ -12,7 +13,7 @@ using Ramsha.Domain.Suppliers.Entities;
 
 namespace Ramsha.Domain.Inventory.Entities;
 
-public class InventoryItem : BaseEntity, IAuditable
+public class InventoryItem : AggregateRoot<InventoryItemId>, IEntityCreation, IEntityModification
 {
     public InventoryItem()
     {
@@ -62,10 +63,10 @@ public class InventoryItem : BaseEntity, IAuditable
     public Product Product { get; set; }
     public SupplierId SupplierId { get; set; }
     public Supplier Supplier { get; set; }
-    public Guid CreatedBy { get; set; }
-    public DateTime Created { get; set; }
-    public Guid? LastModifiedBy { get; set; }
-    public DateTime? LastModified { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime CreationDate { get; set; }
+    public string? UpdatedBy { get; set; }
+    public DateTime? LastUpdateDate { get; set; }
     public StockSelectionType StockSelectionType { get; private set; }
     public int TotalSales { get; private set; }
 
@@ -90,7 +91,7 @@ public class InventoryItem : BaseEntity, IAuditable
         Stocks.Add(stock);
         IncreaseTotalQuantity(quantity);
         UpdateInventoryBasedOnSelectionStockStrategy(StockSelectionType);
-        RaiseDomainEvent(new StockUpdatedEvent(ProductId, ProductVariantId));
+        RaiseEvent(new StockUpdatedEvent(ProductId, ProductVariantId));
     }
 
     public void ApplyDiscount(Discount discount)
@@ -150,7 +151,7 @@ public class InventoryItem : BaseEntity, IAuditable
 
         DecreaseInventoryQuantity(quantity);
         UpdateInventoryBasedOnSelectionStockStrategy(StockSelectionType);
-        RaiseDomainEvent(new StockUpdatedEvent(ProductId, ProductVariantId));
+        RaiseEvent(new StockUpdatedEvent(ProductId, ProductVariantId));
     }
 
     public Stock? GetStock(StockSelectionType stockSelectionType)

@@ -3,16 +3,16 @@ using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Inventory;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Inventory.Queries.GetInventoryItems;
 
 public class GetInventoryItemsQueryHandler(
     IInventoryItemRepository inventoryItemRepository,
     IHttpService httpService
-) : IRequestHandler<GetInventoryItemsQuery, BaseResult<List<InventoryItemDto>>>
+) : RamshaQueryHandler<GetInventoryItemsQuery>
 {
-    public async Task<BaseResult<List<InventoryItemDto>>> Handle(GetInventoryItemsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetInventoryItemsQuery request, CancellationToken cancellationToken)
     {
         var responseDto = await inventoryItemRepository.GetItemsPagedListAsync(
             request.PaginationParams ?? new(),
@@ -23,6 +23,6 @@ public class GetInventoryItemsQueryHandler(
         responseDto.AddSortingMetaData(request.SortingParams);
 
         httpService.AddPagedHeader(responseDto.MetaData);
-        return responseDto.Data;
+        return Success(responseDto.Data);
     }
 }

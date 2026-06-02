@@ -1,4 +1,5 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Customers;
 using Ramsha.Domain.Customers.Entities;
@@ -8,7 +9,7 @@ using Ramsha.Domain.Orders.Events;
 
 namespace Ramsha.Domain.Orders.Entities;
 
-public class Order : BaseEntity
+public class Order : AggregateRoot<OrderId>
 {
 
     public Order()
@@ -31,7 +32,7 @@ public class Order : BaseEntity
     public static Order Create(CustomerId customerId, string paymentIntentId, ShippingAddress shippingAddress)
     {
         var order = new Order(new OrderId(Guid.NewGuid()), customerId, paymentIntentId, shippingAddress);
-        order.RaiseDomainEvent(new NewOrderCreatedEvent(order.Id, order.ShippingAddress));
+        order.RaiseEvent(new NewOrderCreatedEvent(order.Id, order.ShippingAddress));
         return order;
     }
 

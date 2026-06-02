@@ -1,10 +1,11 @@
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Products.Enums;
 using Ramsha.Domain.Suppliers.Enums;
 
 namespace Ramsha.Domain.Suppliers.Entities;
 
-public class Supply : BaseEntity
+public class Supply : Entity<SupplyId>
 {
     public Supply(SupplyId id, string supplier, CurrencyCode currency)
     {
@@ -25,7 +26,6 @@ public class Supply : BaseEntity
     public DateTime? RejectAt { get; set; }
     public decimal Total { get; private set; }
     public int TotalQuantity { get; private set; }
-    public SupplyId Id { get; private set; }
     public CurrencyCode Currency { get; private set; }
     public string Supplier { get; private set; }
     public List<SupplyItem> Items { get; private set; }

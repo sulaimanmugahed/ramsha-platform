@@ -1,11 +1,9 @@
 
-using Ramsha.Application.Dtos.Suppliers;
-using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.AddSupplyRequestItem;
 
-public class AddOrUpdateSupplyRequestItemCommand : IRequest<BaseResult<SupplyRequestDto>>
+public class AddOrUpdateSupplyRequestItemCommand : IRamshaCommand
 {
     public Guid ProductId { get; set; }
     public Guid ProductVariantId { get; set; }

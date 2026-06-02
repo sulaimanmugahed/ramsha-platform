@@ -6,17 +6,17 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Tags.Queries.GetTags;
 
 public class GetTagsQueryHandler(
     ITagRepository tagRepository
-) : IRequestHandler<GetTagsQuery, BaseResult<List<TagDto>>>
+) : RamshaQueryHandler<GetTagsQuery>
 {
-    public async Task<BaseResult<List<TagDto>>> Handle(GetTagsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetTagsQuery request, CancellationToken cancellationToken)
     {
-        var result = await tagRepository.GetAllAsync();
-        return result.Select(t => t.AsDto()).ToList();
+        var result = await tagRepository.GetListAsync();
+        return Success(result.Select(t => t.AsDto()).ToList());
     }
 }

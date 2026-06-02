@@ -5,16 +5,17 @@ using Ramsha.Application.Dtos.Account.Requests;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Constants;
 using Ramsha.Domain.Customers.Entities;
-using MediatR;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Customers.Commands.Create;
+
 internal class CreateCustomerCommandHandler(
 	IUserService userService,
-	ICustomerRepository customerRepository,
-	IUnitOfWork unitOfWork)
-	: IRequestHandler<CreateCustomerCommand, BaseResult<string>>
+	ICustomerRepository customerRepository)
+	: RamshaCommandHandler<CreateCustomerCommand>
 {
-	public async Task<BaseResult<string>> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(CreateCustomerCommand request, CancellationToken cancellationToken)
 	{
 		var registerResult = await userService.CreateAccount(new RegisterRequest
 		{
@@ -25,9 +26,9 @@ internal class CreateCustomerCommandHandler(
 
 		}, roleName: Roles.Customer);
 
-		if (!registerResult.Success)
+		if (!registerResult.Succeeded)
 		{
-			return new List<Error>(registerResult.Errors);
+			return registerResult.Error;
 		}
 
 		var customer = Customer.Create(
@@ -37,8 +38,7 @@ internal class CreateCustomerCommandHandler(
 
 		await customerRepository.AddAsync(customer);
 
-		await unitOfWork.SaveChangesAsync();
 
-		return customer.Id.Value.ToString();
+		return Success(customer.Id.Value.ToString());
 	}
 }

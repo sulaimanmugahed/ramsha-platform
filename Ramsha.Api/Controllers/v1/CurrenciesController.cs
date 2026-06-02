@@ -12,7 +12,7 @@ namespace Ramsha.Api.Controllers.v1;
 /// Manages currency-related operations.
 /// </summary>
 [ApiVersion("1.0")]
-public class CurrenciesController(ICurrencyRateRepository currencyRateRepository, IUnitOfWork unitOfWork) : BaseApiController
+public class CurrenciesController(ICurrencyRateRepository currencyRateRepository) : BaseApiController
 {
     /// <summary>
     /// Retrieves all currencies.
@@ -21,9 +21,9 @@ public class CurrenciesController(ICurrencyRateRepository currencyRateRepository
     /// This endpoint returns a list of all available currencies along with their exchange rates.
     /// </remarks>
     [HttpGet]
-    public async Task<BaseResult<List<CurrencyDto>>> GetAll()
+    public async Task<ActionResult<List<CurrencyDto>>> GetAll()
     {
-        var data = await currencyRateRepository.GetAllAsync();
+        var data = await currencyRateRepository.GetListAsync();
         return data.Select(x => new CurrencyDto(x.CurrencyCode.ToString(), x.ExchangeRate)).ToList();
     }
 
@@ -35,11 +35,11 @@ public class CurrenciesController(ICurrencyRateRepository currencyRateRepository
     /// If the currency does not exist, an error is returned.
     /// </remarks>
     [HttpGet("{currencyCode}")]
-    public async Task<BaseResult<CurrencyDto>> Get(CurrencyCode currencyCode)
+    public async Task<ActionResult<CurrencyDto>> Get(CurrencyCode currencyCode)
     {
-        var currency = await currencyRateRepository.GetAsync(x => x.CurrencyCode == currencyCode);
+        var currency = await currencyRateRepository.FindAsync(x => x.CurrencyCode == currencyCode);
         if (currency is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no currency found");
+            return BadRequest("no currency found");
         return new CurrencyDto(currency.CurrencyCode.ToString(), currency.ExchangeRate);
     }
 
@@ -51,14 +51,13 @@ public class CurrenciesController(ICurrencyRateRepository currencyRateRepository
     /// If the currency does not exist, an error is returned.
     /// </remarks>
     [HttpPut("{currencyCode}")]
-    public async Task<BaseResult> UpdateCurrencyRate(CurrencyCode currencyCode, decimal rate)
+    public async Task<ActionResult> UpdateCurrencyRate(CurrencyCode currencyCode, decimal rate)
     {
-        var currencyToUpdate = await currencyRateRepository.GetAsync(x => x.CurrencyCode == currencyCode);
+        var currencyToUpdate = await currencyRateRepository.FindAsync(x => x.CurrencyCode == currencyCode);
         if (currencyToUpdate is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no currency found");
+            return BadRequest("no currency found");
 
         currencyToUpdate.UpdateRate(rate);
-        await unitOfWork.SaveChangesAsync();
-        return BaseResult.Ok();
+        return Ok();
     }
 }

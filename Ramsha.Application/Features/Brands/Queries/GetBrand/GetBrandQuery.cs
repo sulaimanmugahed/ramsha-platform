@@ -1,14 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Ramsha.Application.Dtos.Products;
-using Ramsha.Application.Wrappers;
-using MediatR;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Brands.Queries.GetBrand;
 
-public class GetBrandQuery : IRequest<BaseResult<BrandDto>>
+public class GetBrandQuery : IRamshaQuery
 {
     public Guid Id { get; set; }
 }

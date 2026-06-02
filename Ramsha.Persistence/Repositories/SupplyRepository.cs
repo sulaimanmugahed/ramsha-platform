@@ -11,10 +11,12 @@ using Ramsha.Application.Wrappers;
 using Ramsha.Application.Extensions;
 using Ramsha.Persistence.Helpers;
 using Ramsha.Application.Dtos.Supplies;
+using Ramsha.EntityFrameworkCore;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class SupplyRepository(ApplicationDbContext context) : GenericRepository<Supply, SupplyId>(context), ISupplyRepository
+public class SupplyRepository(ApplicationDbContext context)
+: EFCoreRepository<ApplicationDbContext, Supply, SupplyId>, ISupplyRepository
 {
     private DbSet<Supply> _supplies = context.Set<Supply>();
 
@@ -51,9 +53,14 @@ public class SupplyRepository(ApplicationDbContext context) : GenericRepository<
             suppliesQuery = suppliesQuery.FilterByColumn(filterColumn);
         }
 
-        return await Paged(
-          suppliesQuery.Select(s => s.AsSupplyDto()),
-          pagedParams.PaginationParams
-          );
+        var count = await suppliesQuery.CountAsync();
+        var paginationParams = pagedParams.PaginationParams;
+        var pagedResult = await suppliesQuery
+        .Select(p => p.AsSupplyDto())
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return new(pagedResult, paginationParams, count);
     }
 }

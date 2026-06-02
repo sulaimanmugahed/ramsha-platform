@@ -29,256 +29,256 @@ IOptionsSnapshot<JWTSettings> jwtSettings) : IAccountServices
 
 
 
-    public async Task<BaseResult> Revoke(string token)
+  public async Task<IRamshaResult> Revoke(string token)
+  {
+
+    var user = await userManager.Users.SingleOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
+
+    if (user is null)
+      return RamshaResults.Unauthenticated(message: "user null");
+
+    var refreshToken = user.RefreshTokens.Single(t => t.Token == token);
+    if (!refreshToken.IsActive)
+      return RamshaResults.Unauthenticated(message: "refreshToken expired");
+
+
+    refreshToken.RevokedOn = DateTime.UtcNow;
+
+    await userManager.UpdateAsync(user);
+    return RamshaResults.Success();
+  }
+
+  public async Task<RamshaResult<AuthenticationResult>> Refresh(string token, string? accessToken = null)
+  {
+    var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
+
+    if (user is null)
+      return RamshaResults.Unauthenticated(message: "no user found");
+
+    var refreshToken = user.RefreshTokens.Single(t => t.Token == token);
+    if (!refreshToken.IsActive)
+      return RamshaResults.Unauthenticated(message: "the token expired");
+
+    refreshToken.RevokedOn = DateTime.UtcNow;
+    var (newRefreshToken, expired) = tokenService.GenerateRefreshToken();
+    user.RefreshTokens.Add(new RefreshToken
     {
+      Token = newRefreshToken,
+      ExpiresOn = expired,
+      CreatedOn = DateTime.UtcNow
+    });
 
-        var user = await userManager.Users.SingleOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
+    await userManager.UpdateAsync(user);
 
-        if (user is null)
-            return new Error(ErrorCode.ErrorInIdentity, "user null");
+    IEnumerable<Claim>? claims;
+    if (accessToken is not null)
+      claims = tokenService.GetPrincipalFromExpiredToken(accessToken).Claims;
+    else
+      claims = await GetClaimsAsync(user);
 
-        var refreshToken = user.RefreshTokens.Single(t => t.Token == token);
-        if (!refreshToken.IsActive)
-            return new Error(ErrorCode.ErrorInIdentity, "refreshToken expired");
+    var newAccessToken = tokenService.GenerateAccessToken(claims);
+
+    var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
+
+    return new AuthenticationResult
+    {
+      AccessToken = newAccessToken,
+      RefreshToken = newRefreshToken,
+      RefreshTokenExpiration = expired,
+      Username = user.UserName,
+      Email = user.Email,
+      AccountId = user.Id,
+      Role = rolesList.FirstOrDefault(),
+      IsVerified = user.EmailConfirmed,
+      Address = user.Address,
+      PreferredCurrency = user.PreferredCurrency.ToString()
+
+    };
+  }
 
 
-        refreshToken.RevokedOn = DateTime.UtcNow;
+  public async Task<IRamshaResult> ChangeUserName(ChangeUserNameRequest model)
+  {
+    var user = await userManager.FindByIdAsync(authenticatedUser.UserId);
 
-        await userManager.UpdateAsync(user);
-        return BaseResult.Ok();
+    user.UserName = model.UserName;
+
+    var identityResult = await userManager.UpdateAsync(user);
+
+    if (identityResult.Succeeded)
+      return RamshaResults.Success();
+
+    return RamshaResults.Invalid(message: identityResult.Errors.FirstOrDefault()?.Description);
+  }
+
+  public async Task<RamshaResult<AuthenticationResult>> Authenticate(AuthenticationRequest request)
+  {
+    var user = await userManager.FindByNameAsync(request.UserName);
+    if (user == null)
+    {
+      return RamshaResults.Unauthenticated(message: "no user found");
+    }
+    var result = await signInManager.PasswordSignInAsync(user.UserName, request.Password, false, lockoutOnFailure: false);
+    if (!result.Succeeded)
+    {
+      return RamshaResults.Unauthenticated(message: "Not found");
     }
 
-    public async Task<BaseResult<AuthenticationResult>> Refresh(string token, string? accessToken = null)
+    var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
+
+    var claimsPrincipal = await signInManager.ClaimsFactory.CreateAsync(user);
+
+    var jwToken = await GenerateJwtToken(user);
+
+
+
+    AuthenticationResult response = new AuthenticationResult()
     {
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
+      AccountId = user.Id,
+      AccessToken = new JwtSecurityTokenHandler().WriteToken(jwToken),
+      Email = user.Email,
+      Username = user.UserName,
+      Role = rolesList.FirstOrDefault(),
+      IsVerified = user.EmailConfirmed,
+      Address = user.Address,
+      PreferredCurrency = user.PreferredCurrency.ToString()
+    };
 
-        if (user is null)
-            return new Error(ErrorCode.ErrorInIdentity, "no user found");
+    if (user.RefreshTokens.Any(t => t.IsActive))
+    {
+      var activeRefreshToken = user.RefreshTokens.FirstOrDefault(t => t.IsActive);
+      response.RefreshToken = activeRefreshToken.Token;
+      response.RefreshTokenExpiration = activeRefreshToken.ExpiresOn;
 
-        var refreshToken = user.RefreshTokens.Single(t => t.Token == token);
-        if (!refreshToken.IsActive)
-            return new Error(ErrorCode.ErrorInIdentity, "the token expired");
+    }
+    else
+    {
+      var (refreshToken, expired) = tokenService.GenerateRefreshToken();
+      response.RefreshToken = refreshToken;
+      response.RefreshTokenExpiration = expired;
 
-        refreshToken.RevokedOn = DateTime.UtcNow;
-        var (newRefreshToken, expired) = tokenService.GenerateRefreshToken();
-        user.RefreshTokens.Add(new RefreshToken
-        {
-            Token = newRefreshToken,
-            ExpiresOn = expired,
-            CreatedOn = DateTime.UtcNow
-        });
+      user.RefreshTokens.Add(new RefreshToken
+      {
+        Token = refreshToken,
+        ExpiresOn = expired,
+        CreatedOn = DateTime.UtcNow
+      });
+      await userManager.UpdateAsync(user);
 
-        await userManager.UpdateAsync(user);
-
-        IEnumerable<Claim>? claims;
-        if (accessToken is not null)
-            claims = tokenService.GetPrincipalFromExpiredToken(accessToken).Claims;
-        else
-            claims = await GetClaimsAsync(user);
-
-        var newAccessToken = tokenService.GenerateAccessToken(claims);
-
-        var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
-
-        return new AuthenticationResult
-        {
-            AccessToken = newAccessToken,
-            RefreshToken = newRefreshToken,
-            RefreshTokenExpiration = expired,
-            Username = user.UserName,
-            Email = user.Email,
-            AccountId = user.Id,
-            Role = rolesList.FirstOrDefault(),
-            IsVerified = user.EmailConfirmed,
-            Address = user.Address,
-            PreferredCurrency = user.PreferredCurrency.ToString()
-
-        };
     }
 
+    return response;
+  }
 
-    public async Task<BaseResult> ChangeUserName(ChangeUserNameRequest model)
+
+  public async Task<RamshaResult<AuthenticationResult>> GetCurrentAccount()
+  {
+    var user = await userManager.FindByNameAsync(authenticatedUser.UserName);
+    if (user == null)
     {
-        var user = await userManager.FindByIdAsync(authenticatedUser.UserId);
-
-        user.UserName = model.UserName;
-
-        var identityResult = await userManager.UpdateAsync(user);
-
-        if (identityResult.Succeeded)
-            return new BaseResult();
-
-        return new List<Error>(identityResult.Errors.Select(p => new Error(ErrorCode.ErrorInIdentity, p.Description)));
+      return RamshaResults.Unauthenticated(message: "no user found");
     }
 
-    public async Task<BaseResult<AuthenticationResult>> Authenticate(AuthenticationRequest request)
+    var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
+
+    var claimsPrincipal = await signInManager.ClaimsFactory.CreateAsync(user);
+
+    var jwToken = tokenService.GenerateAccessToken(claimsPrincipal.Claims);
+
+    AuthenticationResult response = new()
     {
-        var user = await userManager.FindByNameAsync(request.UserName);
-        if (user == null)
-        {
-            return new Error(ErrorCode.ErrorInIdentity, "no user found");
-        }
-        var result = await signInManager.PasswordSignInAsync(user.UserName, request.Password, false, lockoutOnFailure: false);
-        if (!result.Succeeded)
-        {
-            return new Error(ErrorCode.FieldDataInvalid, "Not found", nameof(request.Password));
-        }
+      AccountId = user.Id,
+      AccessToken = jwToken,
+      Email = user.Email,
+      Username = user.UserName,
+      Role = rolesList.FirstOrDefault(),
+      IsVerified = user.EmailConfirmed,
+    };
 
-        var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
+    return response;
+  }
 
-        var claimsPrincipal = await signInManager.ClaimsFactory.CreateAsync(user);
-
-        var jwToken = await GenerateJwtToken(user);
-
-
-
-        AuthenticationResult response = new AuthenticationResult()
-        {
-            AccountId = user.Id,
-            AccessToken = new JwtSecurityTokenHandler().WriteToken(jwToken),
-            Email = user.Email,
-            Username = user.UserName,
-            Role = rolesList.FirstOrDefault(),
-            IsVerified = user.EmailConfirmed,
-            Address = user.Address,
-            PreferredCurrency = user.PreferredCurrency.ToString()
-        };
-
-        if (user.RefreshTokens.Any(t => t.IsActive))
-        {
-            var activeRefreshToken = user.RefreshTokens.FirstOrDefault(t => t.IsActive);
-            response.RefreshToken = activeRefreshToken.Token;
-            response.RefreshTokenExpiration = activeRefreshToken.ExpiresOn;
-
-        }
-        else
-        {
-            var (refreshToken, expired) = tokenService.GenerateRefreshToken();
-            response.RefreshToken = refreshToken;
-            response.RefreshTokenExpiration = expired;
-
-            user.RefreshTokens.Add(new RefreshToken
-            {
-                Token = refreshToken,
-                ExpiresOn = expired,
-                CreatedOn = DateTime.UtcNow
-            });
-            await userManager.UpdateAsync(user);
-
-        }
-
-        return response;
+  public async Task<RamshaResult<AuthenticationResult>> AuthenticateByUserName(string username)
+  {
+    var user = await userManager.FindByNameAsync(username);
+    if (user == null)
+    {
+      return RamshaResults.Unauthenticated(message: "Not Found");
     }
 
+    var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
 
-    public async Task<BaseResult<AuthenticationResult>> GetCurrentAccount()
+    var claimsPrincipal = await signInManager.ClaimsFactory.CreateAsync(user);
+
+    var jwToken = tokenService.GenerateAccessToken(claimsPrincipal.Claims);
+
+    AuthenticationResult response = new AuthenticationResult()
     {
-        var user = await userManager.FindByNameAsync(authenticatedUser.UserName);
-        if (user == null)
-        {
-            return new Error(ErrorCode.ErrorInIdentity, "no user found");
-        }
+      AccountId = user.Id,
+      AccessToken = jwToken,
+      Email = user.Email,
+      Username = user.UserName,
+      Role = rolesList.FirstOrDefault(),
+      IsVerified = user.EmailConfirmed,
+    };
 
-        var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
+    return response;
+  }
 
-        var claimsPrincipal = await signInManager.ClaimsFactory.CreateAsync(user);
+  private async Task<JwtSecurityToken> GenerateJwtToken(Account user)
+  {
+    await userManager.UpdateSecurityStampAsync(user);
 
-        var jwToken = tokenService.GenerateAccessToken(claimsPrincipal.Claims);
+    var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Value.Key));
+    var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
 
-        AuthenticationResult response = new()
-        {
-            AccountId = user.Id,
-            AccessToken = jwToken,
-            Email = user.Email,
-            Username = user.UserName,
-            Role = rolesList.FirstOrDefault(),
-            IsVerified = user.EmailConfirmed,
-        };
+    var jwtSecurityToken = new JwtSecurityToken(
+        issuer: jwtSettings.Value.Issuer,
+        audience: jwtSettings.Value.Audience,
+        claims: await GetClaimsAsync(user),
+        expires: DateTime.UtcNow.AddMinutes(jwtSettings.Value.DurationInMinutes),
+        signingCredentials: signingCredentials);
+    return jwtSecurityToken;
+  }
 
-        return response;
+
+  public async Task LogoutCurrentUser()
+  {
+    await signInManager.SignOutAsync();
+  }
+
+
+  private async Task<IList<Claim>> GetClaimsAsync(Account user)
+  {
+    var result = await signInManager.ClaimsFactory.CreateAsync(user);
+    return result.Claims.ToList();
+  }
+
+  public async Task UpdateAddress(string userName, Address address)
+  {
+    var user = await userManager.FindByNameAsync(userName);
+    if (user is not null)
+    {
+      user.Address = address;
+      await userManager.UpdateAsync(user);
     }
+  }
 
-    public async Task<BaseResult<AuthenticationResult>> AuthenticateByUserName(string username)
-    {
-        var user = await userManager.FindByNameAsync(username);
-        if (user == null)
-        {
-            return new Error(ErrorCode.NotFound, "Not Found", nameof(username));
-        }
+  public async Task<bool> SendConfirmEmail(string userEmail)
+  {
+    var account = await userManager.FindByEmailAsync(userEmail);
+    if (account is null) return false;
 
-        var rolesList = await userManager.GetRolesAsync(user).ConfigureAwait(false);
+    var token = await GenerateConfirmationToken(account);
+    await SendConfirmationEmail(userEmail, token, account.UserName);
+    return true;
+  }
 
-        var claimsPrincipal = await signInManager.ClaimsFactory.CreateAsync(user);
+  private async Task SendConfirmationEmail(string email, string token, string name)
+  {
+    var confirmationLink = $"http://localhost:3000/verifyEmail?userEmail={email}&token={token}";
 
-        var jwToken = tokenService.GenerateAccessToken(claimsPrincipal.Claims);
-
-        AuthenticationResult response = new AuthenticationResult()
-        {
-            AccountId = user.Id,
-            AccessToken = jwToken,
-            Email = user.Email,
-            Username = user.UserName,
-            Role = rolesList.FirstOrDefault(),
-            IsVerified = user.EmailConfirmed,
-        };
-
-        return response;
-    }
-
-    private async Task<JwtSecurityToken> GenerateJwtToken(Account user)
-    {
-        await userManager.UpdateSecurityStampAsync(user);
-
-        var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Value.Key));
-        var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
-
-        var jwtSecurityToken = new JwtSecurityToken(
-            issuer: jwtSettings.Value.Issuer,
-            audience: jwtSettings.Value.Audience,
-            claims: await GetClaimsAsync(user),
-            expires: DateTime.UtcNow.AddMinutes(jwtSettings.Value.DurationInMinutes),
-            signingCredentials: signingCredentials);
-        return jwtSecurityToken;
-    }
-
-
-    public async Task LogoutCurrentUser()
-    {
-        await signInManager.SignOutAsync();
-    }
-
-
-    private async Task<IList<Claim>> GetClaimsAsync(Account user)
-    {
-        var result = await signInManager.ClaimsFactory.CreateAsync(user);
-        return result.Claims.ToList();
-    }
-
-    public async Task UpdateAddress(string userName, Address address)
-    {
-        var user = await userManager.FindByNameAsync(userName);
-        if (user is not null)
-        {
-            user.Address = address;
-            await userManager.UpdateAsync(user);
-        }
-    }
-
-    public async Task<bool> SendConfirmEmail(string userEmail)
-    {
-        var account = await userManager.FindByEmailAsync(userEmail);
-        if (account is null) return false;
-
-        var token = await GenerateConfirmationToken(account);
-        await SendConfirmationEmail(userEmail, token, account.UserName);
-        return true;
-    }
-
-    private async Task SendConfirmationEmail(string email, string token, string name)
-    {
-        var confirmationLink = $"http://localhost:3000/verifyEmail?userEmail={email}&token={token}";
-
-        string htmlContent = $@"
+    string htmlContent = $@"
 <!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -358,14 +358,14 @@ IOptionsSnapshot<JWTSettings> jwtSettings) : IAccountServices
 
 
 
-        await emailService.SendEmailMessage(new Application.Contracts.Email.EmailMessage([email], "Confirm Your Email", htmlContent));
-    }
+    await emailService.SendEmailMessage(new Application.Contracts.Email.EmailMessage([email], "Confirm Your Email", htmlContent));
+  }
 
-    private async Task SendResetPasswordEmail(string email, string token, string name)
-    {
-        var confirmationLink = $"http://localhost:3000/reset-password?token={token}";
+  private async Task SendResetPasswordEmail(string email, string token, string name)
+  {
+    var confirmationLink = $"http://localhost:3000/reset-password?token={token}";
 
-        string htmlContent = $@"
+    string htmlContent = $@"
 <!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -444,66 +444,66 @@ IOptionsSnapshot<JWTSettings> jwtSettings) : IAccountServices
 
 
 
-        await emailService.SendEmailMessage(new Application.Contracts.Email.EmailMessage([email], "Reset Your Password", htmlContent));
-    }
+    await emailService.SendEmailMessage(new Application.Contracts.Email.EmailMessage([email], "Reset Your Password", htmlContent));
+  }
 
-    private async Task<string> GenerateConfirmationToken(Account account)
+  private async Task<string> GenerateConfirmationToken(Account account)
+  {
+    return await userManager.GenerateEmailConfirmationTokenAsync(account);
+  }
+
+  public async Task<bool> VerifyEmail(string userEmail, string token)
+  {
+    var user = await userManager.FindByEmailAsync(userEmail);
+
+    if (user is null) return false;
+
+    var result = await userManager.ConfirmEmailAsync(user, token.Replace(" ", "+"));
+
+    return result.Succeeded;
+  }
+
+  public async Task<bool> SendResetPasswordEmail(string username)
+  {
+    var account = await userManager.FindByNameAsync(username);
+    if (!(account is not null && await userManager.IsEmailConfirmedAsync(account)))
     {
-        return await userManager.GenerateEmailConfirmationTokenAsync(account);
+      return false;
     }
 
-    public async Task<bool> VerifyEmail(string userEmail, string token)
+    var token = await userManager.GeneratePasswordResetTokenAsync(account);
+    await SendResetPasswordEmail(account.Email, token, username);
+
+    return true;
+
+  }
+
+  public async Task<bool> ResetPassword(string username, ResetPasswordRequest request)
+  {
+    var account = await userManager.FindByNameAsync(username);
+    if (account is null)
     {
-        var user = await userManager.FindByEmailAsync(userEmail);
-
-        if (user is null) return false;
-
-        var result = await userManager.ConfirmEmailAsync(user, token.Replace(" ", "+"));
-
-        return result.Succeeded;
+      return false;
     }
 
-    public async Task<bool> SendResetPasswordEmail(string username)
+    var result = await userManager.ResetPasswordAsync(account, request.Token.Replace(" ", "+"), request.NewPassword);
+    return result.Succeeded;
+  }
+
+
+  public async Task<bool> ChangePassword(string username, ChangePasswordRequest request)
+  {
+    var account = await userManager.FindByNameAsync(username);
+    if (account is null)
     {
-        var account = await userManager.FindByNameAsync(username);
-        if (!(account is not null && await userManager.IsEmailConfirmedAsync(account)))
-        {
-            return false;
-        }
-
-        var token = await userManager.GeneratePasswordResetTokenAsync(account);
-        await SendResetPasswordEmail(account.Email, token, username);
-
-        return true;
-
+      return false;
     }
 
-    public async Task<bool> ResetPassword(string username, ResetPasswordRequest request)
+    var result = await userManager.ChangePasswordAsync(account, request.CurrentPassword, request.NewPassword);
+    if (result.Succeeded)
     {
-        var account = await userManager.FindByNameAsync(username);
-        if (account is null)
-        {
-            return false;
-        }
-
-        var result = await userManager.ResetPasswordAsync(account, request.Token.Replace(" ", "+"), request.NewPassword);
-        return result.Succeeded;
+      await signInManager.RefreshSignInAsync(account);
     }
-
-
-    public async Task<bool> ChangePassword(string username, ChangePasswordRequest request)
-    {
-        var account = await userManager.FindByNameAsync(username);
-        if (account is null)
-        {
-            return false;
-        }
-
-        var result = await userManager.ChangePasswordAsync(account, request.CurrentPassword, request.NewPassword);
-        if (result.Succeeded)
-        {
-            await signInManager.RefreshSignInAsync(account);
-        }
-        return result.Succeeded;
-    }
+    return result.Succeeded;
+  }
 }

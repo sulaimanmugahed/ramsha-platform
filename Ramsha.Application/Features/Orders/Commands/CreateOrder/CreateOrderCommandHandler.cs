@@ -2,33 +2,33 @@ using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Orders.Entities;
-using MediatR;
+
 using Ramsha.Application.Services;
 using Ramsha.Domain.Baskets.Entities;
 using Ramsha.Application.Contracts.Identity.UserInterfaces;
 using Ramsha.Domain.Common;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Orders.Commands.CreateOrder;
 
 public class CreateOrderCommandHandler(
     IBasketRepository basketRepository,
     IGeocodingService geocodingService,
-    IUnitOfWork unitOfWork,
     IUserService userService,
     ICustomerRepository customerRepository,
     IAuthenticatedUserService authenticatedUser,
     IOrderRepository orderRepository,
     DeliveryFeeService deliveryFeeService
-) : IRequestHandler<CreateOrderCommand, BaseResult<string>>
+) : RamshaCommandHandler<CreateOrderCommand>
 {
-    public async Task<BaseResult<string>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(CreateOrderCommand request, CancellationToken cancellationToken)
     {
 
         var customer = await customerRepository
-        .GetAsync(x => x.Username == authenticatedUser.UserName);
+        .FindAsync(x => x.Username == authenticatedUser.UserName);
 
         if (customer is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var shippingAddress = request.ShippingAddress;
         if (shippingAddress is null)
@@ -36,7 +36,7 @@ public class CreateOrderCommandHandler(
             var customerAddress = await userService.GetUserAddress(authenticatedUser.UserName);
             if (customerAddress is null)
             {
-                return new Error(ErrorCode.EmptyData, "Customer address is null");
+                return Invalid(message: "Customer address is null");
             }
             shippingAddress = new ShippingAddress
             {
@@ -54,7 +54,7 @@ public class CreateOrderCommandHandler(
 
         var basket = await basketRepository.GetDetail(authenticatedUser.UserName);
         if (basket is null || basket.PaymentIntentId is null)
-            return new Error(ErrorCode.EmptyData, "basket is null");
+            return Invalid(message: "basket is null");
 
         var order = Order.Create(customer.Id, basket.PaymentIntentId, shippingAddress);
 
@@ -86,7 +86,7 @@ public class CreateOrderCommandHandler(
 
                 var inventoryItem = supplierItem.InventoryItem;
                 if (inventoryItem is null)
-                    return new Error(ErrorCode.RequestedDataNotExist, "one or more item was not found");
+                    return Invalid(message: "one or more item was not found");
 
                 var itemOrdered = new ProductItemOrdered(
                     inventoryItem.Id,
@@ -111,12 +111,10 @@ public class CreateOrderCommandHandler(
         order.SetFulfillmentRequests(fulfillmentRequests);
 
         await orderRepository.AddAsync(order);
-        basketRepository.Delete(basket);
+        await basketRepository.DeleteAsync(basket);
 
 
 
-        await unitOfWork.SaveChangesAsync();
-
-        return order.Id.Value.ToString();
+        return Success(order.Id.Value.ToString());
     }
 }

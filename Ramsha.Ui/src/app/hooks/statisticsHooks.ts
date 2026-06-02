@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { statisticsService } from "../api/services/statisticsService"
 import { STATISTICS_ADMIN_QUERY_KEY, STATISTICS_SUPPLIER_QUERY_KEY } from "../constants/queriesKey"
-import { SupplierStatistics } from "../models/statistics/SupplierStatistics"
+import { SupplierStatistics } from "../models/statistics/supplierStatistics"
 import { AdminStatistics } from "../models/statistics/adminStatistics"
 
 export const useSupplierStatistics = () => {

@@ -13,8 +13,6 @@ public class BasketService(
 IBasketRepository basketRepository,
 IGeocodingService geocodingService,
 IAuthenticatedUserService authenticatedUserService,
-ICustomerRepository customerRepository,
-IUnitOfWork unitOfWork,
 IUserService userService,
 DeliveryFeeService deliveryFeeService)
 {
@@ -92,8 +90,7 @@ DeliveryFeeService deliveryFeeService)
         var basket = await basketRepository.FindByBuyer(authenticatedUserService.UserName);
         if (basket is not null)
         {
-            basketRepository.Delete(basket);
-            await unitOfWork.SaveChangesAsync();
+            await basketRepository.DeleteAsync(basket);
         }
 
     }

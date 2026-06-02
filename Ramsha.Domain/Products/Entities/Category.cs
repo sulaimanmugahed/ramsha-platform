@@ -1,9 +1,10 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class Category : BaseEntity
+public class Category : Entity<CategoryId>
 {
     private Category(CategoryId id, string name)
     {
@@ -11,7 +12,6 @@ public class Category : BaseEntity
         Name = name;
     }
 
-    public CategoryId Id { get; set; }
     public string Name { get; set; }
     public string Code { get; set; }
     public CategoryId? ParentCategoryId { get; set; }

@@ -1,10 +1,9 @@
-using Ramsha.Application.Dtos.Orders;
-using Ramsha.Application.Wrappers;
-using MediatR;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Orders.Queries.GetCustomerOrders;
 
-public class GetCustomerOrdersQuery : IRequest<BaseResult<List<OrderDto>>>
+public class GetCustomerOrdersQuery : IRamshaQuery
 {
 
 }

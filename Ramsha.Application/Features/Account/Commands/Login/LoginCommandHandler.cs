@@ -8,49 +8,55 @@ using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Constants;
 using Ramsha.Domain.Customers.Entities;
-using MediatR;
+
 using Microsoft.AspNetCore.Http;
 using System.Net.Http;
+using Ramsha.LocalMessaging;
 
 
 namespace Ramsha.Application.Features.Account.Commands.Login;
+
 internal class LoginCommandHandler(
 	IAccountServices accountServices,
-	IAuthenticatedUserService authenticatedUserService,
 	IBasketRepository basketRepository,
-	ICookieService cookieService,
-	IUnitOfWork unitOfWork)
-	: IRequestHandler<LoginCommand, BaseResult<AuthenticatedUserDto?>>
+	ICookieService cookieService)
+	: RamshaCommandHandler<LoginCommand>
 {
-	public async Task<BaseResult<AuthenticatedUserDto?>> Handle(LoginCommand request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(LoginCommand request, CancellationToken cancellationToken)
 	{
-		var result = await accountServices.Authenticate(
-			new() { UserName = request.Username, Password = request.Password });
-
-		if (!result.Success)
+		return await TransactionalUnitOfWork<IRamshaResult>(async () =>
 		{
-			return result.Errors;
-		}
+			var result = await accountServices.Authenticate(
+						new() { UserName = request.Username, Password = request.Password });
 
-		if (!string.IsNullOrEmpty(result.Data?.RefreshToken))
-		{
-			cookieService.SetCookieValue(ApplicationCookies.RefreshToken,
-				result.Data.RefreshToken,
-				new()
-				{
-					HttpOnly = true,
-					Expires = result.Data.RefreshTokenExpiration.ToLocalTime(),
-					SameSite = SameSiteMode.Lax,
-					Secure = true,
-				});
-		}
+			if (!result.Succeeded)
+			{
+				return result.Error;
+			}
+
+			if (!string.IsNullOrEmpty(result.Value?.RefreshToken))
+			{
+				cookieService.SetCookieValue(ApplicationCookies.RefreshToken,
+					result.Value.RefreshToken,
+					new()
+					{
+						HttpOnly = true,
+						Expires = result.Value.RefreshTokenExpiration.ToLocalTime(),
+						SameSite = SameSiteMode.Lax,
+						Secure = true,
+					});
+			}
 
 
-		return result.Data!.Role switch
-		{
-			Roles.Customer => result.Data.AsAuthCustomerDto(await GetAndHandleCustomerBasket(result.Data.Username)),
-			_ => result.Data.AsAuthUserDto()
-		};
+			var dto = result.Value!.Role switch
+			{
+				Roles.Customer => result.Value.AsAuthCustomerDto(await GetAndHandleCustomerBasket(result.Value.Username)),
+				_ => result.Value.AsAuthUserDto()
+			};
+
+			return Success(dto);
+		});
+
 
 	}
 
@@ -65,12 +71,10 @@ internal class LoginCommandHandler(
 		{
 			if (authCustomerBasket is not null)
 			{
-				basketRepository.Delete(authCustomerBasket);
+				await basketRepository.DeleteAsync(authCustomerBasket);
 			}
 			anonCustomerBasket.Buyer = username;
 			cookieService.RemoveCookie(ApplicationCookies.Buyer);
-
-			await unitOfWork.SaveChangesAsync();
 		}
 
 		return anonCustomerBasket ?? authCustomerBasket;

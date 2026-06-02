@@ -86,7 +86,7 @@ const SupplierDashboard: React.FC = () => {
                                 <Typography variant="h6">Top Selling Product</Typography>
                             </Box>
                             <Typography color={'primary'} fontWeight={'bold'} variant="h4">
-                                {topSellingProduct.length > 15 ? `${topSellingProduct.slice(0, 15)}...` : topSellingProduct}
+                                {topSellingProduct?.length > 15 ? `${topSellingProduct.slice(0, 15)}...` : topSellingProduct}
                             </Typography>
                         </div>
                     </Paper>

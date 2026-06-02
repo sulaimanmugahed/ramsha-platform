@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory;
 using Ramsha.Domain.Suppliers;
@@ -10,14 +11,13 @@ using Ramsha.Domain.Suppliers.Entities;
 namespace Ramsha.Domain.Products.Entities;
 
 
-public class Rating : BaseEntity
+public class Rating : Entity<RatingId>
 {
     public Rating()
     {
 
     }
 
-    public RatingId Id { get; set; }
     public decimal Value { get; set; }
     public string RatingBy { get; set; }
     public string Review { get; set; }

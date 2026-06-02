@@ -22,8 +22,8 @@ public class SuppliesController : BaseApiController
     /// This endpoint returns a paginated list of supplies based on the provided query parameters.
     /// </remarks>
     [HttpPost("paged")]
-    public async Task<BaseResult<List<SupplyDto>>> GetCurrentSupplierSupplies([FromBody] GetSuppliesPagedQuery query)
-        => await Mediator.Send(query);
+    public async Task<ActionResult<List<SupplyDto>>> GetCurrentSupplierSupplies([FromBody] GetSuppliesPagedQuery query)
+        => await Query(query);
 
     /// <summary>
     /// Retrieves details of a specific supply.
@@ -32,8 +32,8 @@ public class SuppliesController : BaseApiController
     /// This endpoint returns the details of a supply identified by its unique ID.
     /// </remarks>
     [HttpGet("{id}/detail")]
-    public async Task<BaseResult<SupplyDetailDto?>> GetDetail(Guid id)
-        => await Mediator.Send(new GetSupplyDetailQuery { Id = id });
+    public async Task<ActionResult<SupplyDetailDto?>> GetDetail(Guid id)
+        => await Query(new GetSupplyDetailQuery { Id = id });
 
     /// <summary>
     /// Approves a supply request.
@@ -42,6 +42,6 @@ public class SuppliesController : BaseApiController
     /// This endpoint approves a supply request identified by its unique ID.
     /// </remarks>
     [HttpPost("{id}/approve")]
-    public async Task<BaseResult> ApproveSupply(Guid id)
-        => await Mediator.Send(new ApproveSupplyCommand { SupplyId = id });
+    public async Task<ActionResult> ApproveSupply(Guid id)
+        => await Command(new ApproveSupplyCommand { SupplyId = id });
 }

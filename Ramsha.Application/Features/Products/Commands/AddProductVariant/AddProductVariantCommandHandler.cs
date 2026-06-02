@@ -5,35 +5,35 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
-using MediatR;
+
 using Ramsha.Application.Contracts.BackgroundJobs;
 using Ramsha.Application.Services;
 using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Helpers;
+using Ramsha.Caching;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.AddProductVariant;
 
 public class AddProductVariantCommandHandler(
     IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
     IOptionRepository optionRepository,
     IVariantService variantService,
     ICodeGenerator codeGenerator,
     IBackgroundJobService backgroundJobService,
-   ICacheService cacheService,
-   ProductService productService
+   IRamshaCache cacheService
 
-) : IRequestHandler<AddProductVariantCommand, BaseResult>
+) : RamshaCommandHandler<AddProductVariantCommand>
 {
-    public async Task<BaseResult> Handle(AddProductVariantCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(AddProductVariantCommand request, CancellationToken cancellationToken)
     {
         var product = await productRepository.GetProductWithVariantsAndOptions(new Domain.Products.ProductId(request.ProductId));
         if (product is null)
-            return new Error(ErrorCode.EmptyData, nameof(request.ProductId));
+            return Invalid(message: "no product was found");
 
 
         if (variantService.IsVariantExists(product.Variants, request.VariantValues))
-            return new Error(ErrorCode.ThisDataAlreadyExist, "this variant is already exist");
+            return Invalid(message: "this variant is already exist");
 
         var productVariant = ProductVariant.Create(product.Id,
                 new DimensionalWeight(request.Length, request.Width, request.Height),
@@ -50,15 +50,15 @@ public class AddProductVariantCommandHandler(
             var option = product.Options.SingleOrDefault(x => x.OptionId.Value == variantValue.Option)?.Option;
             if (option is null)
             {
-                option = await optionRepository.GetAsync(o => o.Id == new Domain.Products.OptionId(variantValue.Option), o => o.OptionValues);
+                option = await optionRepository.FindAsync(o => o.Id == new Domain.Products.OptionId(variantValue.Option), [o => o.OptionValues]);
                 if (option is null)
-                    return new Error(ErrorCode.RequestedDataNotExist, "invalid option", nameof(request.VariantValues));
+                    return Invalid(message: "invalid option");
                 product.AddOption(option);
             }
 
             var value = option?.OptionValues.SingleOrDefault(v => v.Id.Value == variantValue.Value);
             if (value is null)
-                return new Error(ErrorCode.EmptyData, "invalid option value", nameof(request.VariantValues));
+                return Invalid(message: "invalid option value");
 
             optionValuesNames.Add(value.Name);
             productVariant.AddValue(option.Id, value.Id);
@@ -71,10 +71,9 @@ public class AddProductVariantCommandHandler(
 
         product.Update();
 
-        await unitOfWork.SaveChangesAsync();
 
-        backgroundJobService.Enqueue(() => productService.InvalidateRelatedCachedData(request.ProductId.ToString(), cacheService));
+        backgroundJobService.Enqueue(() => cacheService.RemoveByTagAsync(new string[] { CacheKeysHelper.ProductCacheKeys.Tag, CacheKeysHelper.ProductCacheKeys.Tag + request.ProductId }));
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

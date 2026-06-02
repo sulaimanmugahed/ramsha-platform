@@ -7,47 +7,50 @@ using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Constants;
 using Ramsha.Domain.Customers.Entities;
-using MediatR;
 using Microsoft.AspNetCore.Http;
+using Ramsha.LocalMessaging;
 
 
 namespace Ramsha.Application.Features.Account.Commands.RefreshToken;
+
 internal class RefreshCommandHandler(
 	IBasketRepository basketRepository,
 	IAccountServices accountServices,
 	ICookieService cookieService)
-	: IRequestHandler<RefreshCommand, BaseResult<AuthenticatedUserDto?>>
+	: RamshaCommandHandler<RefreshCommand>
 {
-	public async Task<BaseResult<AuthenticatedUserDto?>> Handle(RefreshCommand request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(RefreshCommand request, CancellationToken cancellationToken)
 	{
 		var refreshToken = cookieService.GetCookieValue(ApplicationCookies.RefreshToken);
 		if (refreshToken is null)
-			return new Error(ErrorCode.ErrorInIdentity, "no refresh token found in the cookie");
+			return Unauthenticated(message: "no refresh token found in the cookie");
 
 
 
 		var result = await accountServices.Refresh(refreshToken, request.AccessToken);
-		if (!result.Success)
-			return result.Errors;
+		if (!result.Succeeded)
+			return result.Error;
 
-		if (!string.IsNullOrEmpty(result.Data?.RefreshToken))
+		if (!string.IsNullOrEmpty(result.Value?.RefreshToken))
 		{
 			cookieService.SetCookieValue(ApplicationCookies.RefreshToken,
-				result.Data.RefreshToken,
+				result.Value.RefreshToken,
 				new()
 				{
 					HttpOnly = true,
-					Expires = result.Data.RefreshTokenExpiration.ToLocalTime(),
+					Expires = result.Value.RefreshTokenExpiration.ToLocalTime(),
 					SameSite = SameSiteMode.Lax,
 					Secure = true,
 				});
 		}
 
-		return result.Data.Role switch
+		var dto = result.Value.Role switch
 		{
-			Roles.Customer => result.Data.AsAuthCustomerDto(await GetCustomerBasket(result.Data.Username)),
-			_ => result.Data.AsAuthUserDto()
+			Roles.Customer => result.Value.AsAuthCustomerDto(await GetCustomerBasket(result.Value.Username)),
+			_ => result.Value.AsAuthUserDto()
 		};
+
+		return Success(dto);
 
 	}
 

@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Orders.Commands.ShipFulfillmentRequest;
 
-public class ShipFulfillmentRequestCommand : IRequest<BaseResult>
+public class ShipFulfillmentRequestCommand : IRamshaCommand
 {
     public Guid OrderId { get; set; }
     public Guid FulfillmentRequestId { get; set; }

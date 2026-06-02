@@ -3,17 +3,17 @@ using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
-using MediatR;
+using Ramsha.LocalMessaging;
+
 
 namespace Ramsha.Application.Features.Products.Commands.CreateCategory;
 
 public class CreateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
-    IUnitOfWork unitOfWork,
     ICodeGenerator codeGenerator
-) : IRequestHandler<CreateCategoryCommand, BaseResult<string>>
+) : RamshaCommandHandler<CreateCategoryCommand>
 {
-    public async Task<BaseResult<string>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(CreateCategoryCommand request, CancellationToken cancellationToken)
     {
         var newCategory = Category.Create(request.Name);
 
@@ -25,8 +25,7 @@ public class CreateCategoryCommandHandler(
         newCategory.SetCode(codeGenerator.GenerateCategoryCode(newCategory.Id.Value));
 
         await categoryRepository.AddAsync(newCategory);
-        await unitOfWork.SaveChangesAsync();
 
-        return newCategory.Id.Value.ToString();
+        return Success(newCategory.Id.Value.ToString());
     }
 }

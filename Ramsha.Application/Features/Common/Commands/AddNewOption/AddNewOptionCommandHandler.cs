@@ -6,24 +6,22 @@ using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
-using MediatR;
+using Ramsha.LocalMessaging;
+
 
 namespace Ramsha.Application.Features.Common.Commands.AddNewOption;
 
 public class AddNewOptionCommandHandler(
-    IOptionRepository optionRepository,
-    IUnitOfWork unitOfWork)
-    : IRequestHandler<AddNewOptionCommand, BaseResult<string>>
+    IOptionRepository optionRepository)
+    : RamshaCommandHandler<AddNewOptionCommand>
 {
-    public async Task<BaseResult<string>> Handle(AddNewOptionCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(AddNewOptionCommand request, CancellationToken cancellationToken)
     {
         var option = Option.Create(request.OptionName);
         option.AddValues(request.OptionValues);
 
         await optionRepository.AddAsync(option);
 
-        await unitOfWork.SaveChangesAsync();
-
-        return option.Id.Value.ToString();
+        return Success(option.Id.Value.ToString());
     }
 }

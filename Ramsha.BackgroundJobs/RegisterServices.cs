@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
+using Hangfire.PostgreSql;
 using Hangfire.SqlServer;
 using Hangfire.Storage;
 using Microsoft.Extensions.Configuration;
@@ -16,9 +17,9 @@ public static class RegisterServices
 {
     public static IServiceCollection AddBackgroundJobsServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHangfire(x => x.UseSqlServerStorage(
+        services.AddHangfire(x => x.UsePostgreSqlStorage(
             configuration.GetConnectionString("DefaultConnection"),
-            new SqlServerStorageOptions
+            new PostgreSqlStorageOptions
             {
                 SchemaName = "BackgroundJobs",
             }));

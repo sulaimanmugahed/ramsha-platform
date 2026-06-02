@@ -1,9 +1,9 @@
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.UpdateSupplyRequestItem;
 
-public class UpdateSupplyRequestItemCommand:IRequest<BaseResult>
+public class UpdateSupplyRequestItemCommand : IRamshaCommand
 {
     public Guid SupplyRequestItemId { get; set; }
     public int Quantity { get; set; }

@@ -1,10 +1,9 @@
 
-using MediatR;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.AddSupplyRequestItem;
 
-public class SupplyItemExistCommand : IRequest<BaseResult<bool>>
+public class SupplyItemExistCommand : IRamshaCommand
 {
-    
+
 }

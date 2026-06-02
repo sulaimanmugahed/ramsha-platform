@@ -20,7 +20,7 @@ namespace Ramsha.Application.Wrappers
         public List<CategoryId>? Categories { get; set; }
         public List<ColumnSort> ColumnsSort { get; set; } = [];
 
-        public static PagedMetaData Create(PaginationParams paginationParams, int totalCount)
+        public static PagedMetaData Create(Ramsha.Application.Wrappers.PaginationParams paginationParams, int totalCount)
         {
             var totalPage = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize);
             return new(

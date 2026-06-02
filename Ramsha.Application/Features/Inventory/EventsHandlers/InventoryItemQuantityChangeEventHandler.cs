@@ -1,19 +1,17 @@
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Domain.Inventory.Events;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Inventory.EventsHandlers;
 
-public class InventoryItemQuantityChangeEventHandler(
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork
-) : INotificationHandler<InventoryItemQuantityChangeEvent>
+public class InventoryItemQuantityChangeEventHandler : ILocalEventHandler<InventoryItemQuantityChangeEvent>
 {
 
-    public async Task Handle(InventoryItemQuantityChangeEvent notification, CancellationToken cancellationToken)
+    public async Task HandleAsync(InventoryItemQuantityChangeEvent message, CancellationToken cancellationToken)
     {
-     
+
 
     }
 

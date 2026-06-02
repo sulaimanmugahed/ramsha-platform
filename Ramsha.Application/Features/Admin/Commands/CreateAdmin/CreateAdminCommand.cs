@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MediatR;
 using Ramsha.Application.Constants;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Admin.Commands.CreateAdmin;
 
-public class CreateAdminCommand : IRequest<BaseResult<string>>
+public class CreateAdminCommand : IRamshaCommand
 {
     public string Email { get; set; }
     public string Username { get; set; }

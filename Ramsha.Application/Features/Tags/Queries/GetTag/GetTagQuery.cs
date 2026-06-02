@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Tags.Queries.GetTag;
 
-public class GetTagQuery : IRequest<BaseResult<TagDto>>
+public class GetTagQuery : IRamshaQuery
 {
     public Guid Id { get; set; }
 }

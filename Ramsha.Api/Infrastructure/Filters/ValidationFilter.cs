@@ -1,5 +1,4 @@
 ﻿
-using Azure;
 using FluentValidation;
 using Ramsha.Application.Wrappers;
 using System.Net;
@@ -10,8 +9,8 @@ namespace Ramsha.Api.Infrastructure.Filters;
 public class ValidationFilter<T> : IEndpointFilter
 {
 
-	// this filter catch the FluentValidation error and map them to the base Response
-	public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    // this filter catch the FluentValidation error and map them to the base Response
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var validator = context.HttpContext.RequestServices.GetService<IValidator<T>>();
         if (validator is not null)
@@ -26,20 +25,22 @@ public class ValidationFilter<T> : IEndpointFilter
                     return await next(context);
 
                 context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                var responseModel = new BaseResult();
-                responseModel.Success = false;
+                List<NamedError> errors = [];
                 foreach (var item in validation.ToDictionary())
                 {
                     foreach (var val in item.Value)
                     {
-                        responseModel.Errors ??= [];
-                        responseModel.Errors.Add(
-                        new Error(ErrorCode.ModelStateNotValid,
+
+                        errors.Add(
+                        new NamedError(
+                        item.Key,
                         val,
-                        item.Key));
+                        RamshaErrorsCodes.INVALID
+
+                        ));
                     }
                 }
-                return responseModel;
+                return new RamshaErrorResult(RamshaResultStatus.Invalid, RamshaErrorsCodes.INVALID, Errors: errors);
             }
             else
                 return Results.Problem("Something went wrong");

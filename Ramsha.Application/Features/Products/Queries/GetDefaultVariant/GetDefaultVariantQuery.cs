@@ -1,14 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Dtos.Products;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Queries.GetDefaultVariant;
 
-public class GetDefaultVariantQuery : IRequest<BaseResult<ProductVariantDto?>>
+public class GetDefaultVariantQuery : IRamshaQuery
 {
     public Guid ProductId { get; set; }
 }

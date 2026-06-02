@@ -5,22 +5,18 @@ using Ramsha.Application.Dtos.Baskets;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Customers.Entities;
-using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Baskets.Commands.Create;
+
 public class CreateBasketCommandHandler(
 	ICookieService cookieService,
 	IAuthenticatedUserService authenticatedUser,
-	IBasketRepository basketRepository,
-	IUnitOfWork unitOfWork) 
-	: IRequestHandler<CreateBasketCommand, BaseResult<BasketDto>>
+	IBasketRepository basketRepository)
+	: RamshaCommandHandler<CreateBasketCommand>
 {
-	public async Task<BaseResult<BasketDto>> Handle(CreateBasketCommand request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(CreateBasketCommand request, CancellationToken cancellationToken)
 	{
 		var buyer = authenticatedUser.UserName;
 		if (string.IsNullOrEmpty(buyer))
@@ -39,8 +35,7 @@ public class CreateBasketCommandHandler(
 		var basket = Basket.Create(buyer);
 
 		_ = await basketRepository.AddAsync(basket);
-		await unitOfWork.SaveChangesAsync();
 
-		return basket.ToDto();
+		return Success(basket.ToDto());
 	}
 }

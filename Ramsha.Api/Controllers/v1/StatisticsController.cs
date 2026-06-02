@@ -20,23 +20,23 @@ namespace Ramsha.Api.Controllers.v1;
 [ApiVersion("1.0")]
 public class StatisticsController() : BaseApiController
 {
-  /// <summary>
-  /// Retrieves statistics for currently supplier.
-  /// </summary>
-  /// <remarks>
-  /// This endpoint returns statistics relevant to currently supplier.
-  /// </remarks>
-  [HttpGet("supplier")]
-  public async Task<BaseResult<SupplierStatistics>> GetSupplierStatistics()
-      => await Mediator.Send(new GetSupplierStatisticsQuery());
+    /// <summary>
+    /// Retrieves statistics for currently supplier.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns statistics relevant to currently supplier.
+    /// </remarks>
+    [HttpGet("supplier")]
+    public async Task<ActionResult<SupplierStatistics>> GetSupplierStatistics()
+        => await Query(new GetSupplierStatisticsQuery());
 
-  /// <summary>
-  /// Retrieves statistics for administrators.
-  /// </summary>
-  /// <remarks>
-  /// This endpoint returns high-level and global statistics for administrators.
-  /// </remarks>
-  [HttpGet("admin")]
-  public async Task<BaseResult<AdminStatistics>> GetAdminStatistics()
-      => await Mediator.Send(new GetAdminStatisticsQuery());
+    /// <summary>
+    /// Retrieves statistics for administrators.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns high-level and global statistics for administrators.
+    /// </remarks>
+    [HttpGet("admin")]
+    public async Task<ActionResult<AdminStatistics>> GetAdminStatistics()
+        => await Query(new GetAdminStatisticsQuery());
 }

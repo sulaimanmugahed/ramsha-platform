@@ -2,30 +2,29 @@
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
-using MediatR;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.AddProductOption;
 
 public class AddProductOptionCommandHandler(
     IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
     IOptionRepository optionRepository
-) : IRequestHandler<AddProductOptionCommand, BaseResult>
+) : RamshaCommandHandler<AddProductOptionCommand>
 {
-    public async Task<BaseResult> Handle(AddProductOptionCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(AddProductOptionCommand request, CancellationToken cancellationToken)
     {
-        var product = await productRepository.GetByIdAsync(new Domain.Products.ProductId(request.ProductId));
+        var product = await productRepository.FindAsync(new Domain.Products.ProductId(request.ProductId));
         if (product is null)
-            return new Error(ErrorCode.EmptyData, nameof(request.ProductId));
+            return Invalid(message: "no product was found");
 
-        var option = await optionRepository.GetByIdAsync(new Domain.Products.OptionId(request.OptionId));
+        var option = await optionRepository.FindAsync(new Domain.Products.OptionId(request.OptionId));
         if (option is null)
-            return new Error(ErrorCode.EmptyData, nameof(request.OptionId));
+            return Invalid(message: "no option was found");
 
         product.AddOption(option, request.Priority);
         product.Update();
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

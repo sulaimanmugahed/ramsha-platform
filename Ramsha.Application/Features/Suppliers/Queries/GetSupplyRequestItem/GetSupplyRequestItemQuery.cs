@@ -1,11 +1,9 @@
 
-using MediatR;
-using Ramsha.Application.Dtos.Suppliers;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetSupplyRequestItem;
 
-public class GetSupplyRequestItemQuery : IRequest<BaseResult<SupplyRequestItemDto?>>
+public class GetSupplyRequestItemQuery : IRamshaQuery
 {
     public Guid SupplyRequestItemId { get; set; }
 }

@@ -14,7 +14,7 @@ public class CurrencyExchangeService(ICurrencyRateRepository currencyRateReposit
         if (amount <= 0)
             throw new ArgumentException("Amount must be greater than zero.", nameof(amount));
 
-        var fromRate = await currencyRateRepository.GetAsync(x => x.CurrencyCode == fromCurrency);
+        var fromRate = await currencyRateRepository.FindAsync(x => x.CurrencyCode == fromCurrency);
         if (fromRate is null)
             throw new Exception($"{fromCurrency} not found");
 
@@ -29,11 +29,11 @@ public class CurrencyExchangeService(ICurrencyRateRepository currencyRateReposit
         if (amount <= 0)
             throw new ArgumentException("Amount must be greater than zero.", nameof(amount));
 
-        var fromRate = await currencyRateRepository.GetAsync(x => x.CurrencyCode == fromCurrency);
+        var fromRate = await currencyRateRepository.FindAsync(x => x.CurrencyCode == fromCurrency);
         if (fromRate is null)
             throw new Exception($"{fromCurrency} not found");
 
-        var toRate = await currencyRateRepository.GetAsync(x => x.CurrencyCode == toCurrency);
+        var toRate = await currencyRateRepository.FindAsync(x => x.CurrencyCode == toCurrency);
         if (toRate is null)
             throw new Exception($"{toRate} not found");
 

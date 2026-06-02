@@ -15,28 +15,28 @@ using Ramsha.Application.Dtos.Catalog;
 using Microsoft.Extensions.Options;
 using Ramsha.Domain.Settings;
 using Ramsha.Domain.Products.Enums;
+using Ramsha.EntityFrameworkCore;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class InventoryItemRepository(
-ApplicationDbContext context
-, IOptionsSnapshot<GlobalAppSettings> settings)
-: GenericRepository<InventoryItem, InventoryItemId>(context),
+public class InventoryItemRepository(IOptionsSnapshot<GlobalAppSettings> settings)
+: EFCoreRepository<ApplicationDbContext, InventoryItem, InventoryItemId>,
 IInventoryItemRepository
 {
-    private readonly DbSet<InventoryItem> _items = context.Set<InventoryItem>();
-
-
 
     public async Task<InventoryItem?> MaxBy(Expression<Func<InventoryItem, object>> prop)
     {
-        return await _items.OrderByDescending(prop).FirstOrDefaultAsync();
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems.OrderByDescending(prop).FirstOrDefaultAsync();
     }
 
 
     public async Task<InventoryItem?> GetWithDetails(Expression<Func<InventoryItem, bool>> criteria)
     {
-        return await _items
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems
          .Include(i => i.Stocks)
         .Include(i => i.Product)
         .ThenInclude(x => x.Category)
@@ -45,7 +45,9 @@ IInventoryItemRepository
 
     public async Task<IEnumerable<InventoryItem>> GetAllWithDetails(Expression<Func<InventoryItem, bool>> criteria)
     {
-        return await _items
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems
         .Include(i => i.Product)
         .ThenInclude(x => x.Category)
         .Where(criteria)
@@ -54,7 +56,9 @@ IInventoryItemRepository
 
     public async Task<IEnumerable<InventoryItem>> GetItemListDetails()
     {
-        return await _items
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems
         .AsSplitQuery()
         .Include(i => i.Product)
         .ThenInclude(x => x.Category)
@@ -65,15 +69,19 @@ IInventoryItemRepository
 
     public async Task<IEnumerable<InventoryItem>> GetAllWithDetails()
     {
-        return await _items
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems
         .Include(i => i.Product)
         .ThenInclude(x => x.Category)
         .ToListAsync();
     }
 
-    public async Task<PaginationResponseDto<CatalogInventoryItemDetailDto>> GetCatalogItemsPagedListAsync(ProductId productId, PaginationParams paginationParams, SortingParams? sortingParams = null, FilterParams? filterParams = null, ProductVariantId? productVariantId = null)
+    public async Task<PaginationResponseDto<CatalogInventoryItemDetailDto>> GetCatalogItemsPagedListAsync(ProductId productId, Ramsha.Application.Wrappers.PaginationParams paginationParams, SortingParams? sortingParams = null, FilterParams? filterParams = null, ProductVariantId? productVariantId = null)
     {
-        var query = _items
+        var context = await GetDbContextAsync();
+
+        var query = context.InventoryItems
         .Include(x => x.SupplierVariant)
         .ThenInclude(x => x.SupplierProductImages)
         .Where(x => x.ProductId == productId)
@@ -123,16 +131,23 @@ IInventoryItemRepository
         }
 
 
-        return await Paged(
-          query.Select(p => p.AsCatalogInventoryItemDetailDto()),
-          paginationParams
-          );
+        var count = await query.CountAsync();
+
+        var pagedResult = await query
+        .Select(p => p.AsCatalogInventoryItemDetailDto())
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return new(pagedResult, paginationParams, count);
     }
 
 
-    public async Task<PaginationResponseDto<InventoryItemDto>> GetItemsPagedListAsync(PaginationParams paginationParams, SortingParams? sortingParams = null, FilterParams? filterParams = null)
+    public async Task<PaginationResponseDto<InventoryItemDto>> GetItemsPagedListAsync(Ramsha.Application.Wrappers.PaginationParams paginationParams, SortingParams? sortingParams = null, FilterParams? filterParams = null)
     {
-        var query = _items.AsQueryable();
+        var context = await GetDbContextAsync();
+
+        var query = context.InventoryItems.AsQueryable();
 
         if (sortingParams is not null)
         {
@@ -153,26 +168,37 @@ IInventoryItemRepository
             }
         }
 
-        return await Paged(
-          query.Select(p => p.AsDto()),
-          paginationParams
-          );
+        var count = await query.CountAsync();
+
+        var pagedResult = await query
+        .Select(p => p.AsDto())
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return new(pagedResult, paginationParams, count);
     }
 
     public async Task<int> GetVariantQuantity(ProductVariantId productVariantId)
     {
-        var items = await _items.Where(i => i.ProductVariantId == productVariantId).ToListAsync();
+        var context = await GetDbContextAsync();
+
+        var items = await context.InventoryItems.Where(i => i.ProductVariantId == productVariantId).ToListAsync();
         return items.Select(x => x.AvailableQuantity).Sum();
     }
 
     public async Task<InventoryItem?> GetInventoryItemBySku(string sku)
     {
-        return await _items.FirstOrDefaultAsync(x => x.InventorySKU == sku);
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems.FirstOrDefaultAsync(x => x.InventorySKU == sku);
     }
 
     public async Task<InventoryItem?> GetWithStocksDetail(InventoryItemId id)
     {
-        return await _items.Include(x => x.Stocks)
+        var context = await GetDbContextAsync();
+
+        return await context.InventoryItems.Include(x => x.Stocks)
         .ThenInclude(x => x.Discounts).FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -180,7 +206,9 @@ IInventoryItemRepository
     ProductId productId,
     ProductPricingStrategy pricingStrategy)
     {
-        var variantQuery = _items
+        var context = await GetDbContextAsync();
+
+        var variantQuery = context.InventoryItems
             .Where(x => x.ProductId == productId && x.SupplierVariant != null)
             .GroupBy(x => x.ProductVariantId);
 

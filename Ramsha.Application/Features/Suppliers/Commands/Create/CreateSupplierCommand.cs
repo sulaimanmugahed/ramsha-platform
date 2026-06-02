@@ -1,13 +1,9 @@
-﻿using Ramsha.Application.Wrappers;
-using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.Create;
-public class CreateSupplierCommand: IRequest<BaseResult<string>>
+
+public class CreateSupplierCommand : IRamshaCommand
 {
 	public string FirstName { get; set; }
 	public string LastName { get; set; }

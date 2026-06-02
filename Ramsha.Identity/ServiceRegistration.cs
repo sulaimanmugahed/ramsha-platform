@@ -61,7 +61,7 @@ public static class ServiceRegistration
     public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<IdentityContext>(options =>
-        options.UseSqlServer(
+        options.UseNpgsql(
             configuration.GetConnectionString("IdentityConnection"),
             b => b.MigrationsAssembly(typeof(IdentityContext).Assembly.FullName)));
 
@@ -123,14 +123,14 @@ public static class ServiceRegistration
                         context.HandleResponse();
                         context.Response.StatusCode = 401;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(BaseResult.Failure(new Error(ErrorCode.AccessDenied, "You are not Authorized")), serializerSettings);
+                        var result = JsonConvert.SerializeObject(RamshaResults.Unauthenticated(message: "You are not Authorized"), serializerSettings);
                         return context.Response.WriteAsync(result);
                     },
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = 403;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(BaseResult.Failure(new Error(ErrorCode.AccessDenied, "You are not authorized to access this resource")), serializerSettings);
+                        var result = JsonConvert.SerializeObject(RamshaResults.Unauthenticated(message: "You are not authorized to access this resource"), serializerSettings);
                         return context.Response.WriteAsync(result);
                     },
                     OnTokenValidated = async context =>

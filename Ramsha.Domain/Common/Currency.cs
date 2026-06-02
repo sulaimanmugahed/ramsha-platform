@@ -1,9 +1,10 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Products.Enums;
 
 namespace Ramsha.Domain.Common;
 
-public class Currency : BaseEntity
+public class Currency : Entity<int>
 {
     private Currency() { }
     private Currency(CurrencyCode currency, decimal exchangeRate)
@@ -24,7 +25,6 @@ public class Currency : BaseEntity
     }
 
 
-    public int Id { get; set; }
     public CurrencyCode CurrencyCode { get; private set; }
     public decimal ExchangeRate { get; private set; }
     public DateTime LastUpdate { get; private set; }

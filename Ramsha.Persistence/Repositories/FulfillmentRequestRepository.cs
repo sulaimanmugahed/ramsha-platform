@@ -10,19 +10,20 @@ using Ramsha.Domain.Orders;
 using Ramsha.Domain.Orders.Entities;
 using Ramsha.Domain.Suppliers;
 using Ramsha.Domain.Suppliers.Entities;
+using Ramsha.EntityFrameworkCore;
 using Ramsha.Persistence.Contexts;
 using Ramsha.Persistence.Helpers;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class FulfillmentRequestRepository(ApplicationDbContext context)
- : GenericRepository<FulfillmentRequest, FulfillmentRequestId>(context), IFulfillmentRequestRepository
+public class FulfillmentRequestRepository
+ : EFCoreRepository<ApplicationDbContext, FulfillmentRequest, FulfillmentRequestId>, IFulfillmentRequestRepository
 {
-    private readonly DbSet<FulfillmentRequest> _requests = context.Set<FulfillmentRequest>();
 
-    public async Task<PaginationResponseDto<FulfillmentRequestDto>> GetPaged(PaginationParams paginationParams, FilterParams? filterParams, SortingParams? sortingParams, Expression<Func<FulfillmentRequest, bool>>? criteria = null)
+    public async Task<PaginationResponseDto<FulfillmentRequestDto>> GetPaged(Ramsha.Application.Wrappers.PaginationParams paginationParams, FilterParams? filterParams, SortingParams? sortingParams, Expression<Func<FulfillmentRequest, bool>>? criteria = null)
     {
-        var query = _requests.AsQueryable();
+        var context = await GetDbContextAsync();
+        var query = context.FulfillmentRequests.AsQueryable();
 
         if (criteria is not null)
         {
@@ -48,9 +49,14 @@ public class FulfillmentRequestRepository(ApplicationDbContext context)
             }
         }
 
-        return await Paged(
-          query.Select(p => p.AsFulfillmentRequestDto()),
-          paginationParams
-          );
+        var count = await query.CountAsync();
+
+        var pagedResult = await query
+        .Select(p => p.AsFulfillmentRequestDto())
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return new(pagedResult, paginationParams, count);
     }
 }

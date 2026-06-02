@@ -27,8 +27,8 @@ public class BrandsController : BaseApiController
     /// This endpoint returns a list of all available brands.
     /// </remarks>
     [HttpGet]
-    public async Task<BaseResult<List<BrandDto>>> GetBrands()
-   => await Mediator.Send(new GetBrandsQuery());
+    public async Task<ActionResult<List<BrandDto>>> GetBrands()
+   => await Query(new GetBrandsQuery());
 
     /// <summary>
     /// Retrieves a specific brand by ID.
@@ -38,8 +38,8 @@ public class BrandsController : BaseApiController
     /// </remarks>
 
     [HttpGet("{id}")]
-    public async Task<BaseResult<BrandDto>> GetBrand(Guid id)
-   => await Mediator.Send(new GetBrandQuery { Id = id });
+    public async Task<ActionResult<BrandDto>> GetBrand(Guid id)
+   => await Query(new GetBrandQuery { Id = id });
 
 
     /// <summary>
@@ -50,8 +50,8 @@ public class BrandsController : BaseApiController
     /// Returns the ID of the newly created brand.
     /// </remarks>
     [HttpPost]
-    public async Task<BaseResult<string>> CreateBrand(CreateBrandCommand command)
-   => await Mediator.Send(command);
+    public async Task<ActionResult<string>> CreateBrand(CreateBrandCommand command)
+   => await Command(command);
 
     /// <summary>
     /// Updates an existing brand.
@@ -60,10 +60,10 @@ public class BrandsController : BaseApiController
     /// This endpoint updates the details of an existing brand identified by its ID.
     /// </remarks>
     [HttpPut("{id}")]
-    public async Task<BaseResult> UpdateBrand(Guid id, UpdateBrandCommand command)
+    public async Task<ActionResult> UpdateBrand(Guid id, UpdateBrandCommand command)
     {
         command.Id = id;
-        return await Mediator.Send(command);
+        return await Command(command);
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public class BrandsController : BaseApiController
     /// This endpoint deletes a brand identified by its unique ID.
     /// </remarks>
     [HttpDelete("{id}")]
-    public async Task<BaseResult> DeleteBrand(Guid id)
-   => await Mediator.Send(new DeleteBrandCommand { Id = id });
+    public async Task<ActionResult> DeleteBrand(Guid id)
+   => await Command(new DeleteBrandCommand { Id = id });
 
 }

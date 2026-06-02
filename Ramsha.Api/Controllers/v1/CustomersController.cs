@@ -27,8 +27,8 @@ public class CustomersController : BaseApiController
 	/// This endpoint returns a paginated list of customers based on the provided query parameters.
 	/// </remarks>
 	[HttpPost("paged")]
-	public async Task<BaseResult<List<CustomerDto>>> GetPaged(GetCustomersPagedQuery query)
-		=> await Mediator.Send(query);
+	public async Task<ActionResult<List<CustomerDto>>> GetPaged(GetCustomersPagedQuery query)
+		=> await Query(query);
 
 	/// <summary>
 	/// Creates or register new customer.
@@ -39,6 +39,6 @@ public class CustomersController : BaseApiController
 	/// </remarks>
 	[AllowAnonymous]
 	[HttpPost]
-	public async Task<ActionResult<BaseResult<string>>> Create(CreateCustomerCommand command)
-		=> await Mediator.Send(command);
+	public async Task<ActionResult<ActionResult<string>>> Create(CreateCustomerCommand command)
+		=> await Command(command);
 }

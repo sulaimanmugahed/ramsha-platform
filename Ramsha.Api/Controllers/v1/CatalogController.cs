@@ -23,8 +23,8 @@ public class CatalogController : BaseApiController
     /// This endpoint returns a paginated list of products available in the catalog based on the provided query parameters.
     /// </remarks>
     [HttpPost("products")]
-    public async Task<BaseResult<List<CatalogProductDto>>> GetProductsPaged([FromBody] GetCatalogProductsPagedQuery query)
-        => await Mediator.Send(query);
+    public async Task<ActionResult<List<CatalogProductDto>>> GetProductsPaged([FromBody] GetCatalogProductsPagedQuery query)
+        => await Query(query);
 
     /// <summary>
     /// Retrieves detailed information about a catalog product.
@@ -33,8 +33,8 @@ public class CatalogController : BaseApiController
     /// This endpoint returns detailed information about a product in the catalog identified by its unique ID.
     /// </remarks>
     [HttpGet("products/{productId}")]
-    public async Task<BaseResult<CatalogProductDetailDto>> GetProductCatalogDetail(Guid productId)
-        => await Mediator.Send(new GetCatalogProductDetailQuery { ProductId = productId });
+    public async Task<ActionResult<CatalogProductDetailDto>> GetProductCatalogDetail(Guid productId)
+        => await Query(new GetCatalogProductDetailQuery { ProductId = productId });
 
     /// <summary>
     /// Retrieves details of a specific catalog product variant.
@@ -43,8 +43,8 @@ public class CatalogController : BaseApiController
     /// This endpoint returns details of a specific variant for a product in the catalog. If no variant ID is provided, it returns the default variant.
     /// </remarks>
     [HttpGet("products/{productId}/variants/{variantId?}")]
-    public async Task<BaseResult<CatalogVariantDto?>> GetCatalogProductVariant(Guid productId, Guid? variantId = null)
-        => await Mediator.Send(new GetCatalogProductVariantQuery { ProductId = productId, ProductVariantId = variantId });
+    public async Task<ActionResult<CatalogVariantDto?>> GetCatalogProductVariant(Guid productId, Guid? variantId = null)
+        => await Query(new GetCatalogProductVariantQuery { ProductId = productId, ProductVariantId = variantId });
 
     /// <summary>
     /// Retrieves a list of catalog categories.
@@ -53,8 +53,8 @@ public class CatalogController : BaseApiController
     /// This endpoint returns a list of all categories available in the catalog.
     /// </remarks>
     [HttpGet("categories")]
-    public async Task<BaseResult<List<CatalogCategoryDto>>> GetCatalogCategories()
-        => await Mediator.Send(new GetCatalogCategoriesQuery());
+    public async Task<ActionResult<List<CatalogCategoryDto>>> GetCatalogCategories()
+        => await Query(new GetCatalogCategoriesQuery());
 
     /// <summary>
     /// Retrieves inventory items for a catalog product.
@@ -63,10 +63,10 @@ public class CatalogController : BaseApiController
     /// This endpoint returns a list of inventory items for a product in the catalog. If a variant ID is provided, it filters the results for that specific variant.
     /// </remarks>
     [HttpPost("{productId}/inventoryItems/{productVariantId?}")]
-    public async Task<BaseResult<List<CatalogInventoryItemDetailDto>>> GetInventoryItems(Guid productId, [FromBody] GetCatalogInventoryItemsQuery query, [FromRoute] Guid? productVariantId = null)
+    public async Task<ActionResult<List<CatalogInventoryItemDetailDto>>> GetInventoryItems(Guid productId, [FromBody] GetCatalogInventoryItemsQuery query, [FromRoute] Guid? productVariantId = null)
     {
         query.ProductId = productId;
         query.ProductVariantId = productVariantId;
-        return await Mediator.Send(query);
+        return await Query(query);
     }
 }

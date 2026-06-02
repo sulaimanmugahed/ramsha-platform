@@ -1,33 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.RemoveSupplyRequestItem;
 
 public class RemoveSupplyRequestItemCommandHandler(
     ISupplyRequestRepository supplyRequestRepository,
-    IAuthenticatedUserService authenticatedUserService,
-    IUnitOfWork unitOfWork
-) : IRequestHandler<RemoveSupplyRequestItemCommand, BaseResult>
+    IAuthenticatedUserService authenticatedUserService
+) : RamshaCommandHandler<RemoveSupplyRequestItemCommand>
 {
-    public async Task<BaseResult> Handle(RemoveSupplyRequestItemCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(RemoveSupplyRequestItemCommand request, CancellationToken cancellationToken)
     {
         var supplyRequest = await supplyRequestRepository
        .GetWithDetails(x => x.Supplier == authenticatedUserService.UserName);
 
         if (supplyRequest is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no supplyRequest exist");
+            return Invalid(message: "no supplyRequest exist");
 
         supplyRequest.RemoveItem(new Domain.Suppliers.SupplyRequestItemId(request.SupplyRequestItemId));
 
-        await unitOfWork.SaveChangesAsync();
-
-        return BaseResult.Ok();
+        return Success();
     }
 }
 

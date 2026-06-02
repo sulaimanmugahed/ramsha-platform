@@ -1,15 +1,13 @@
-using MediatR;
-using Ramsha.Application.Contracts.Persistence;
-using Ramsha.Application.Dtos.Catalog;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetSupplierVariantDetail;
 
 public class GetSupplierVariantDetailQueryHandler(
-) : IRequestHandler<GetSupplierVariantDetailQuery, BaseResult<CatalogSupplierItemDetailDto>>
+) : RamshaQueryHandler<GetSupplierVariantDetailQuery>
 {
-    public async Task<BaseResult<CatalogSupplierItemDetailDto>> Handle(GetSupplierVariantDetailQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetSupplierVariantDetailQuery request, CancellationToken cancellationToken)
     {
-        return new BaseResult<CatalogSupplierItemDetailDto>();
+        return Success();
     }
 }

@@ -4,8 +4,7 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Suppliers;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Suppliers.Entities;
-using Ramsha.Domain.Suppliers.Enums;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.SendSupplyRequest;
 
@@ -13,21 +12,19 @@ public class SendSupplyRequestCommandHandler(
 
     ISupplyRequestRepository supplyRequestRepository,
     IAuthenticatedUserService authenticatedUser,
-    ISupplierRepository supplierRepository,
-    ISupplyRepository supplyRepository,
-    IUnitOfWork unitOfWork
-) : IRequestHandler<SendSupplyRequestCommand, BaseResult>
+    ISupplyRepository supplyRepository
+) : RamshaCommandHandler<SendSupplyRequestCommand>
 {
-    public async Task<BaseResult> Handle(SendSupplyRequestCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(SendSupplyRequestCommand request, CancellationToken cancellationToken)
     {
         if (authenticatedUser.UserName is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var supplyRequest = await supplyRequestRepository.GetWithDetails(
            x => x.Supplier == authenticatedUser.UserName);
 
         if (supplyRequest is null)
-            return new Error(ErrorCode.EmptyData);
+            return Invalid(message: "no supplyRequest was found");
 
         var supply = Supply.Create(authenticatedUser.UserName, request.Currency);
         int totalQuantity = 0;
@@ -47,10 +44,8 @@ public class SendSupplyRequestCommandHandler(
 
         await supplyRepository.AddAsync(supply);
 
-        supplyRequestRepository.Delete(supplyRequest);
+        await supplyRequestRepository.DeleteAsync(supplyRequest);
 
-        await unitOfWork.SaveChangesAsync();
-
-        return BaseResult.Ok();
+        return Success();
     }
 }

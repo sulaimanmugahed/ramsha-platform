@@ -2,26 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MediatR;
 using Ramsha.Application.Contracts.Identity.UserInterfaces;
 using Ramsha.Application.Dtos.Admins;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Constants;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Admin.Queries.GetAdmins;
 
 public class GetAdminsQueryHandler(
     IUserService userService
-) : IRequestHandler<GetAdminsQuery, BaseResult<List<AdminDto>>>
+) : RamshaQueryHandler<GetAdminsQuery>
 {
-    public async Task<BaseResult<List<AdminDto>>> Handle(GetAdminsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetAdminsQuery request, CancellationToken cancellationToken)
     {
         var response = await userService.GetAccounts(Roles.Admin);
-        if (!response.Success)
+        if (!response.Succeeded)
         {
-            return response.Errors;
+            return response.Error;
         }
 
-        return response.Data.Select(x => new AdminDto(x.Id, x.Username, x.Email)).ToList();
+        return Success(response.Value?.Select(x => new AdminDto(x.Id, x.Username, x.Email)).ToList());
     }
 }

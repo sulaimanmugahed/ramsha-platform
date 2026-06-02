@@ -7,17 +7,17 @@ using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Constants;
 using Ramsha.Domain.Customers.Entities;
 using Ramsha.Domain.Suppliers.Entities;
-using MediatR;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Customers.Commands.Create;
+
 internal class CreateSupplierCommandHandler(
 	IUserService userService,
-	IGeocodingService geocodingService,
-	ISupplierRepository supplierRepository,
-	IUnitOfWork unitOfWork)
-	: IRequestHandler<CreateSupplierCommand, BaseResult<string>>
+	ISupplierRepository supplierRepository)
+	: RamshaCommandHandler<CreateSupplierCommand>
 {
-	public async Task<BaseResult<string>> Handle(CreateSupplierCommand request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(CreateSupplierCommand request, CancellationToken cancellationToken)
 	{
 		var registerResult = await userService.CreateAccount(new RegisterRequest
 		{
@@ -26,10 +26,10 @@ internal class CreateSupplierCommandHandler(
 			Username = request.Username
 		}, Roles.Supplier);
 
-		if (!registerResult.Success)
+		if (!registerResult.Succeeded)
 
 		{
-			return new List<Error>(registerResult.Errors);
+			return registerResult.Error;
 		}
 
 		var supplier = Supplier.Create(
@@ -39,8 +39,7 @@ internal class CreateSupplierCommandHandler(
 
 		await supplierRepository.AddAsync(supplier);
 
-		await unitOfWork.SaveChangesAsync();
 
-		return supplier.Id.Value.ToString();
+		return Success(supplier.Id.Value.ToString());
 	}
 }

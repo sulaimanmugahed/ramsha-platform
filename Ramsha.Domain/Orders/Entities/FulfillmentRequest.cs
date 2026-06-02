@@ -1,4 +1,5 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.DeliveryAgents;
 using Ramsha.Domain.Orders.Enums;
@@ -7,7 +8,7 @@ using Ramsha.Domain.Suppliers.Entities;
 
 namespace Ramsha.Domain.Orders.Entities;
 
-public class FulfillmentRequest : BaseEntity
+public class FulfillmentRequest : Entity<FulfillmentRequestId>
 {
 
     private FulfillmentRequest() { }

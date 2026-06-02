@@ -3,22 +3,22 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Queries.GetProductById;
 
 public class GetProductByIdQueryHandler(
     IProductRepository productRepository
-) : IRequestHandler<GetProductByIdQuery, BaseResult<ProductDto>>
+) : RamshaQueryHandler<GetProductByIdQuery>
 {
-    public async Task<BaseResult<ProductDto?>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
-        var product = await productRepository.GetAsync(
+        var product = await productRepository.FindAsync(
         p => p.Id.Value == request.Id,
-         x => x.Category,
-         X => X.Inventories
+        [ x => x.Category,
+         X => X.Inventories]
         );
 
-        return product?.AsDto();
+        return Success(product?.AsDto());
     }
 }

@@ -1,10 +1,9 @@
 
-using MediatR;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.DeliveryAgents.Commands.CreateDeliveryAgent;
 
-public class CreateDeliveryAgentCommand : IRequest<BaseResult<string>>
+public class CreateDeliveryAgentCommand : IRamshaCommand
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }

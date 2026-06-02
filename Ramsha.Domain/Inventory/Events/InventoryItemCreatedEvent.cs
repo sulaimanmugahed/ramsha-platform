@@ -1,6 +1,5 @@
 
 using Ramsha.Domain.Common;
-using Ramsha.Domain.Common.Events;
 using Ramsha.Domain.Products;
 
 
@@ -10,7 +9,7 @@ public sealed record InventoryItemCreatedEvent(
     InventoryItemId InventoryItemId,
     ProductId ProductId,
     ProductVariantId? ProductVariantId,
-    int Quantity, Price RetailPrice, Price FinalPrice) : IDomainEvent
+    int Quantity, Price RetailPrice, Price FinalPrice)
 {
 }
 

@@ -1,10 +1,9 @@
 
-using MediatR;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Commands.UpdateCategory;
 
-public class UpdateCategoryCommand : IRequest<BaseResult>
+public class UpdateCategoryCommand : IRamshaCommand
 {
     public Guid Id { get; set; }
 

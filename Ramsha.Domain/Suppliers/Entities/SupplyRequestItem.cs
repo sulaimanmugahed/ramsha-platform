@@ -1,10 +1,11 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Products;
 using Ramsha.Domain.Products.Entities;
 
 namespace Ramsha.Domain.Suppliers.Entities;
 
-public class SupplyRequestItem
+public class SupplyRequestItem : Entity<SupplyRequestItemId>
 {
     public SupplyRequestItem()
     {
@@ -38,7 +39,6 @@ public class SupplyRequestItem
         Quantity += count;
     }
 
-    public SupplyRequestItemId Id { get; private set; }
     public SupplyRequestId SupplyRequestId { get; set; }
     public SupplyRequest SupplyRequest { get; set; }
     public ProductId ProductId { get; private set; }

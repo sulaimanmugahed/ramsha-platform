@@ -1,4 +1,5 @@
 ﻿
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory;
 using Ramsha.Domain.Inventory.Entities;
@@ -10,7 +11,7 @@ using Ramsha.Domain.Suppliers.Entities;
 namespace Ramsha.Domain.Products.Entities;
 
 
-public sealed class Product : BaseEntity, IAuditable, ISoftDeletable
+public sealed class Product : AggregateRoot<ProductId>, IEntityCreation, IEntityModification, ISoftDeletable
 {
     private Product() { }
 
@@ -51,7 +52,7 @@ public sealed class Product : BaseEntity, IAuditable, ISoftDeletable
 
     public void Update()
     {
-        RaiseDomainEvent(new ProductDataChangedEvent(Id));
+        RaiseEvent(new ProductDataChangedEvent(Id));
     }
 
 
@@ -135,10 +136,10 @@ public sealed class Product : BaseEntity, IAuditable, ISoftDeletable
     }
 
 
-    public Guid CreatedBy { get; set; }
-    public DateTime Created { get; set; }
-    public Guid? LastModifiedBy { get; set; }
-    public DateTime? LastModified { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime CreationDate { get; set; }
+    public string? UpdatedBy { get; set; }
+    public DateTime? LastUpdateDate { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? Deleted { get; set; }
     public Guid? DeletedBy { get; set; }

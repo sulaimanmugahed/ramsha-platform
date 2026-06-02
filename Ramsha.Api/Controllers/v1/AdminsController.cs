@@ -6,7 +6,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ramsha.Application.Constants;
-using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Dtos.Admins;
 using Ramsha.Application.Features.Admin.Commands.CreateAdmin;
 using Ramsha.Application.Features.Admin.Queries.GetAdmins;
@@ -25,23 +24,23 @@ namespace Ramsha.Api.Controllers.v1;
 
 public class AdminsController : BaseApiController
 {
-    /// <summary>
+	/// <summary>
 	/// Get all admins
 	/// </summary>
 	/// <remarks>
 	/// This endpoint returns all admin users only user which has AdminsView permission can access this endpoint..
 	/// </remarks>
-    [HttpGet, HasPermission(PermissionType.AdminsView)]
-    public async Task<BaseResult<List<AdminDto>>> Get()
-    => await Mediator.Send(new GetAdminsQuery());
+	[HttpGet, HasPermission(PermissionType.AdminsView)]
+	public async Task<ActionResult<List<AdminDto>>> Get()
+	=> await Query(new GetAdminsQuery());
 
-    /// <summary>
+	/// <summary>
 	/// Create admin
 	/// </summary>
 	/// <remarks>
 	/// This endpoint create new admin user, only user which has AdminsCreate permission can access this endpoint.
 	/// </remarks>
-    [HttpPost, HasPermission(PermissionType.AdminsCreate)]
-    public async Task<BaseResult<string>> Create(CreateAdminCommand command)
-    => await Mediator.Send(command);
+	[HttpPost, HasPermission(PermissionType.AdminsCreate)]
+	public async Task<ActionResult<string>> Create(CreateAdminCommand command)
+	=> await Command(command);
 }

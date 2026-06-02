@@ -1,12 +1,12 @@
 
 using Ramsha.Application.Dtos.Common;
 using Ramsha.Application.Dtos.Products;
-using Ramsha.Application.Wrappers;
-using MediatR;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Commands.AddProductVariant;
 
-public class AddProductVariantCommand : IRequest<BaseResult>
+public class AddProductVariantCommand : IRamshaCommand
 {
     public Guid ProductId { get; set; }
     public string? ImageUrl { get; set; }

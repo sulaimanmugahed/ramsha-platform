@@ -1,10 +1,11 @@
-﻿using Ramsha.Application.Wrappers;
-using MediatR;
+﻿
 using Ramsha.Domain.Products.Enums;
+using Ramsha.LocalMessaging.Abstractions;
 
 
 namespace Ramsha.Application.Features.Customers.Commands.Create;
-public class CreateCustomerCommand : IRequest<BaseResult<string>>
+
+public class CreateCustomerCommand : IRamshaCommand
 {
 	public string FirstName { get; set; }
 	public string LastName { get; set; }

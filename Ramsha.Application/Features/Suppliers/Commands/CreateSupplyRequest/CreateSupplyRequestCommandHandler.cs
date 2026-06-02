@@ -8,30 +8,29 @@ using Ramsha.Application.Dtos.Suppliers;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Suppliers.Entities;
-using MediatR;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.CreateSupplyRequest;
 
 public class CreateSupplyRequestCommandHandler(
     ISupplyRequestRepository supplyRequestRepository,
     ISupplierRepository supplierRepository,
-    IUnitOfWork unitOfWork,
     IAuthenticatedUserService authenticatedUser
 )
- : IRequestHandler<CreateSupplyRequestCommand, BaseResult<string?>>
+ : RamshaCommandHandler<CreateSupplyRequestCommand>
 {
-    public async Task<BaseResult<string?>> Handle(CreateSupplyRequestCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(CreateSupplyRequestCommand request, CancellationToken cancellationToken)
     {
         var supplier = await supplierRepository.FindByUsername(authenticatedUser.UserName);
         if (supplier is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var supplyRequest = SupplyRequest.Create(supplier.Username);
 
 
         await supplyRequestRepository.AddAsync(supplyRequest);
-        await unitOfWork.SaveChangesAsync();
 
-        return supplyRequest.Id.Value.ToString();
+        return Success(supplyRequest.Id.Value.ToString());
     }
 }

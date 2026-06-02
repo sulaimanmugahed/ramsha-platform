@@ -26,8 +26,8 @@ public class TagsController : BaseApiController
     /// This endpoint returns a list of all available tags.
     /// </remarks>
     [HttpGet]
-    public async Task<BaseResult<List<TagDto>>> GetTags()
-        => await Mediator.Send(new GetTagsQuery());
+    public async Task<ActionResult<List<TagDto>>> GetTags()
+        => await Query(new GetTagsQuery());
 
     /// <summary>
     /// Retrieves a specific tag by its ID.
@@ -36,8 +36,8 @@ public class TagsController : BaseApiController
     /// This endpoint returns the details of a tag identified by its unique ID.
     /// </remarks>
     [HttpGet("{id}")]
-    public async Task<BaseResult<TagDto>> GetTag(Guid id)
-        => await Mediator.Send(new GetTagQuery { Id = id });
+    public async Task<ActionResult<TagDto>> GetTag(Guid id)
+        => await Query(new GetTagQuery { Id = id });
 
     /// <summary>
     /// Creates a new tag.
@@ -47,8 +47,8 @@ public class TagsController : BaseApiController
     /// Returns the ID of the newly created tag.
     /// </remarks>
     [HttpPost]
-    public async Task<BaseResult<string>> CreateBrands(CreateTagCommand command)
-        => await Mediator.Send(command);
+    public async Task<ActionResult<string>> CreateBrands(CreateTagCommand command)
+        => await Command(command);
 
     /// <summary>
     /// Updates an existing tag.
@@ -57,10 +57,10 @@ public class TagsController : BaseApiController
     /// This endpoint updates the details of an existing tag identified by its ID.
     /// </remarks>
     [HttpPut("{id}")]
-    public async Task<BaseResult> UpdateBrands(Guid id, UpdateTagCommand command)
+    public async Task<ActionResult> UpdateBrands(Guid id, UpdateTagCommand command)
     {
         command.Id = id;
-        return await Mediator.Send(command);
+        return await Command(command);
     }
 
     /// <summary>
@@ -70,6 +70,6 @@ public class TagsController : BaseApiController
     /// This endpoint deletes a tag identified by its unique ID.
     /// </remarks>
     [HttpDelete("{id}")]
-    public async Task<BaseResult> DeleteBrands(Guid id)
-        => await Mediator.Send(new DeleteTagCommand { Id = id });
+    public async Task<ActionResult> DeleteBrands(Guid id)
+        => await Command(new DeleteTagCommand { Id = id });
 }

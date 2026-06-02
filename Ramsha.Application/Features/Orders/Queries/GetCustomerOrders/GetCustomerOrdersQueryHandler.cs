@@ -4,7 +4,7 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Orders;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Orders.Queries.GetCustomerOrders;
 
@@ -13,16 +13,16 @@ public class GetCustomerOrdersQueryHandler(
     ICustomerRepository customerRepository,
     IAuthenticatedUserService authenticatedUser
 
-) : IRequestHandler<GetCustomerOrdersQuery, BaseResult<List<OrderDto>>>
+) : RamshaQueryHandler<GetCustomerOrdersQuery>
 {
-    public async Task<BaseResult<List<OrderDto>>> Handle(GetCustomerOrdersQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCustomerOrdersQuery request, CancellationToken cancellationToken)
     {
         var customer = await customerRepository.FindByUsername(authenticatedUser.UserName);
         if (customer is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
 
-        var orders = await orderRepository.GetAllAsync(x => x.CustomerId == customer.Id);
-        return orders.Select(o => o.AsDto()).ToList();
+        var orders = await orderRepository.GetListAsync(x => x.CustomerId == customer.Id);
+        return Success(orders.Select(o => o.AsDto()).ToList());
     }
 }

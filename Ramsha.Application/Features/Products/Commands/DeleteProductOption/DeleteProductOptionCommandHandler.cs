@@ -2,35 +2,31 @@
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
-using MediatR;
-using Ramsha.Application.Contracts.BackgroundJobs;
-using Ramsha.Application.Contracts.Caching;
-using Ramsha.Application.Services;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.DeleteProductOption;
 
 public class DeleteProductOptionCommandHandler(
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork
+    IProductRepository productRepository
 
-) : IRequestHandler<DeleteProductOptionCommand, BaseResult>
+) : RamshaCommandHandler<DeleteProductOptionCommand>
 {
-    public async Task<BaseResult> Handle(DeleteProductOptionCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(DeleteProductOptionCommand request, CancellationToken cancellationToken)
     {
         var product = await productRepository.GetProductWithOptions(new Domain.Products.ProductId(request.ProductId));
         if (product is null)
-            return new Error(ErrorCode.EmptyData);
+            return Invalid(message: "no product was found");
 
         var option = product.Options.FirstOrDefault(o => o.OptionId.Value == request.OptionId);
         if (product is null)
-            return new Error(ErrorCode.EmptyData);
+            return Invalid(message: "no option was found");
 
         product.Options.Remove(option!);
 
         product.Update();
 
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

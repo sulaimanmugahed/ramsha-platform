@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Tags.Commands.DeleteTag;
 
-public class DeleteTagCommand : IRequest<BaseResult>
+public class DeleteTagCommand : IRamshaCommand
 {
     public Guid Id { get; set; }
 }

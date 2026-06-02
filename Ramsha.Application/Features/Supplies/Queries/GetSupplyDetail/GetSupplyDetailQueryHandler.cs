@@ -1,22 +1,21 @@
-
-using MediatR;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Supplies;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Supplies.Queries.GetSupplyDetail;
 
 public class GetSupplyDetailQueryHandler(
     ISupplyRepository supplyRepository
-) : IRequestHandler<GetSupplyDetailQuery, BaseResult<SupplyDetailDto?>>
+) : RamshaQueryHandler<GetSupplyDetailQuery>
 {
-    public async Task<BaseResult<SupplyDetailDto?>> Handle(GetSupplyDetailQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetSupplyDetailQuery request, CancellationToken cancellationToken)
     {
         var supply = await supplyRepository.GetWithDetails(x => x.Id == new Domain.Suppliers.SupplyId(request.Id));
         if (supply is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no supply with this id");
+            return NotFound(message: "no supply with this id");
 
-        return supply.AsSupplyDetailDto();
+        return Success(supply.AsSupplyDetailDto());
     }
 }

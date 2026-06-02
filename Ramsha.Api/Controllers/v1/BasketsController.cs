@@ -26,8 +26,8 @@ public class BasketsController(BasketService basketService) : BaseApiController
 	/// The quantity of the item to be added is specified in the request.
 	/// </remarks>
 	[HttpPost("items")]
-	public async Task<BaseResult<BasketItemDto>> AddItemToBasket(AddItemToBasketCommand command)
-		=> await Mediator.Send(command);
+	public async Task<ActionResult<BasketItemDto>> AddItemToBasket(AddItemToBasketCommand command)
+		=> await Command(command);
 
 	/// <summary>
 	/// Removes an item from basket.
@@ -37,8 +37,8 @@ public class BasketsController(BasketService basketService) : BaseApiController
 	/// If the provided quantity is greater than or equal to the item's quantity in the basket, the item will be completely removed.
 	/// </remarks>
 	[HttpDelete("items")]
-	public async Task<BaseResult> RemoveItemFromBasket(RemoveItemCommand command)
-		=> await Mediator.Send(command);
+	public async Task<ActionResult> RemoveItemFromBasket(RemoveItemCommand command)
+		=> await Command(command);
 
 
 	/// <summary>
@@ -49,8 +49,8 @@ public class BasketsController(BasketService basketService) : BaseApiController
 	/// If the user does not have a basket, the result will be null.
 	/// </remarks>
 	[HttpGet]
-	public async Task<BaseResult<BasketDto?>> GetBasket()
-		=> await Mediator.Send(new GetBasketQuery());
+	public async Task<ActionResult<BasketDto?>> GetBasket()
+		=> await Query(new GetBasketQuery());
 
 	/// <summary>
 	/// Delete the basket.
@@ -59,10 +59,10 @@ public class BasketsController(BasketService basketService) : BaseApiController
 	/// This endpoint delete the basket of the currently user.
 	/// </remarks>
 	[HttpDelete]
-	public async Task<BaseResult> DeleteBasket()
+	public async Task<ActionResult> DeleteBasket()
 	{
 		await basketService.ClearBasket();
-		return BaseResult.Ok();
+		return Ok();
 	}
 
 	/// <summary>
@@ -74,7 +74,7 @@ public class BasketsController(BasketService basketService) : BaseApiController
 	/// If the user does not have a basket, the result will be null.
 	/// </remarks>
 	[HttpGet("detail")]
-	public async Task<BaseResult<BasketDetailDto?>> GetDetail()
+	public async Task<ActionResult<BasketDetailDto?>> GetDetail()
 	{
 		return await basketService.GetBasketDeliveryFeeDetail();
 	}

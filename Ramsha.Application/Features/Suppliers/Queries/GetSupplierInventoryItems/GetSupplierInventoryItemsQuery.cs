@@ -1,11 +1,9 @@
 
-using MediatR;
-using Ramsha.Application.Dtos.Suppliers;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetSupplierInventoryItems;
 
-public class GetSupplierInventoryItemsQuery : IRequest<BaseResult<List<SupplierInventoryItemDto>>>
+public class GetSupplierInventoryItemsQuery : IRamshaQuery
 {
 
 }

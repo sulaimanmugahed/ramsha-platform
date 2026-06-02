@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Tags.Commands.CreateTag;
 
-public class CreateTagCommand : IRequest<BaseResult<string>>
+public class CreateTagCommand : IRamshaCommand
 {
     public string Name { get; set; }
 }

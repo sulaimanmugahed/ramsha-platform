@@ -1,4 +1,5 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 
 using Ramsha.Domain.Suppliers;
@@ -6,7 +7,7 @@ using Ramsha.Domain.Suppliers.Entities;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class SupplierProduct : BaseEntity
+public class SupplierProduct : Entity
 {
     public ProductId ProductId { get; set; }
     public SupplierId SupplierId { get; set; }
@@ -14,8 +15,8 @@ public class SupplierProduct : BaseEntity
     public List<SupplierVariant> SupplierVariants { get; set; } = [];
     public Supplier? Supplier { get; set; }
 
-    
-    
+
+
 
     public string Code { get; private set; }
 
@@ -41,6 +42,8 @@ public class SupplierProduct : BaseEntity
         SupplierVariants.Add(supplierVariant);
     }
 
-
-
+    public override object GetId()
+    {
+        throw new NotImplementedException();
+    }
 }

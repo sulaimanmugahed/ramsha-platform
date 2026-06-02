@@ -1,14 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Dtos.Suppliers;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetCurrentSupplierProducts;
 
-public class GetCurrentSupplierProductsQuery : IRequest<BaseResult<List<SupplierProductDto>>>
+public class GetCurrentSupplierProductsQuery : IRamshaQuery
 {
-    public PaginationParams PaginationParams { get; set; }
+    public Ramsha.Application.Wrappers.PaginationParams PaginationParams { get; set; }
 }

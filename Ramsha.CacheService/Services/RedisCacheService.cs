@@ -1,220 +1,228 @@
 
-using System.Text.Json;
-using Ramsha.Application.Contracts.Caching;
-using Ramsha.Application.Wrappers;
-using StackExchange.Redis;
+// using System.Text.Json;
+// using Ramsha.Application.Contracts.Caching;
+// using Ramsha.Application.Wrappers;
+// using StackExchange.Redis;
 
-namespace Ramsha.CacheService.Services;
+// namespace Ramsha.CacheService.Services;
 
-public class RedisCacheService : ICacheService
-{
-    private readonly IDatabase _database;
+// public class RedisCacheService : ICacheService
+// {
+//     private readonly IDatabase _database;
 
-    public RedisCacheService(IConnectionMultiplexer redis)
-    {
-        _database = redis.GetDatabase();
-    }
+//     public RedisCacheService(IConnectionMultiplexer redis)
+//     {
+//         _database = redis.GetDatabase();
+//     }
 
-    public async Task<BaseResult> SetValue(string key, string value, TimeSpan? expiration = null)
-    {
-        try
-        {
-            var setResult = await _database.StringSetAsync(key, value, expiration);
-            return setResult ? BaseResult.Ok() : BaseResult.Failure();
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to set value in Redis.");
-        }
-    }
+//     public async Task<BaseResult> SetValue(string key, string value, TimeSpan? expiration = null)
+//     {
+//         try
+//         {
+//             var setResult = await _database.StringSetAsync(key, value, expiration);
+//             return setResult ? BaseResult.Ok() : BaseResult.Failure();
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to set value in Redis.");
+//         }
+//     }
 
-    public async Task<BaseResult<string>> GetValue(string key)
-    {
-        try
-        {
-            var value = await _database.StringGetAsync(key);
-            return value.HasValue ? value.ToString() : new Error(ErrorCode.EmptyData, "Key not found.");
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to get value from Redis.");
-        }
-    }
+//     public async Task<BaseResult<string>> GetValue(string key)
+//     {
+//         try
+//         {
+//             var value = await _database.StringGetAsync(key);
+//             return value.HasValue ? value.ToString() : new Error(ErrorCode.EmptyData, "Key not found.");
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to get value from Redis.");
+//         }
+//     }
 
-    public async Task<BaseResult> SetObject<T>(string key, T value, TimeSpan? expiration = null)
-    {
-        try
-        {
-            var serializedValue = JsonSerializer.Serialize(value);
-            var setResult = await _database.StringSetAsync(key, serializedValue, expiration);
-            return setResult ? BaseResult.Ok() : BaseResult.Failure();
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to set object in Redis.");
-        }
-    }
+//     public async Task<BaseResult> SetObject<T>(string key, T value, TimeSpan? expiration = null)
+//     {
+//         try
+//         {
+//             var serializedValue = JsonSerializer.Serialize(value);
+//             var setResult = await _database.StringSetAsync(key, serializedValue, expiration);
+//             return setResult ? BaseResult.Ok() : BaseResult.Failure();
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to set object in Redis.");
+//         }
+//     }
 
-    public async Task<T?> GetObject<T>(string key)
-    {
-        try
-        {
-            var value = await _database.StringGetAsync(key);
-            if (!value.HasValue)
-                return default;
+//     public async Task<T?> GetObject<T>(string key)
+//     {
+//         try
+//         {
+//             var value = await _database.StringGetAsync(key);
+//             if (!value.HasValue)
+//                 return default;
 
-            var deserialized = JsonSerializer.Deserialize<T>(value);
-            return deserialized;
-        }
-        catch
-        {
-            throw new Exception("Failed to get object from Redis.");
-        }
-    }
+//             byte[] convertedValue = (byte[])value;
 
-    public async Task<BaseResult> SetToHash<T>(string hashKey, T data, string entryKey)
-    {
-        try
-        {
-            var exist = await _database.KeyExistsAsync(hashKey);
-            if (!exist)
-                return new Error(ErrorCode.EmptyData, "Hash key does not exist.");
+//             var deserialized = JsonSerializer.Deserialize<T>(convertedValue);
+//             return deserialized;
+//         }
+//         catch
+//         {
+//             throw new Exception("Failed to get object from Redis.");
+//         }
+//     }
 
-            await _database.HashSetAsync(hashKey, new[]
-            {
-                new HashEntry(entryKey, JsonSerializer.Serialize(data)),
-            });
-            return BaseResult.Ok();
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to set data to hash in Redis.");
-        }
-    }
+//     public async Task<BaseResult> SetToHash<T>(string hashKey, T data, string entryKey)
+//     {
+//         try
+//         {
+//             var exist = await _database.KeyExistsAsync(hashKey);
+//             if (!exist)
+//                 return new Error(ErrorCode.EmptyData, "Hash key does not exist.");
 
-    public async Task<BaseResult<IEnumerable<T>>> GetHash<T>(string hashKey)
-    {
-        try
-        {
-            var completeHash = await _database.HashGetAllAsync(hashKey);
-            if (completeHash.Length == 0)
-                return new Error(ErrorCode.EmptyData, "Hash key not found.");
+//             await _database.HashSetAsync(hashKey, new[]
+//             {
+//                 new HashEntry(entryKey, JsonSerializer.Serialize(data)),
+//             });
+//             return BaseResult.Ok();
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to set data to hash in Redis.");
+//         }
+//     }
 
-            var results = completeHash
-                .Where(e => e.Value.HasValue)
-                .Select(e =>
-                {
-                    try { return JsonSerializer.Deserialize<T>(e.Value!); }
-                    catch { return default; }
-                })
-                .Where(item => item != null)
-                .ToList();
+//     public async Task<BaseResult<IEnumerable<T>>> GetHash<T>(string hashKey)
+//     {
+//         try
+//         {
+//             var completeHash = await _database.HashGetAllAsync(hashKey);
+//             if (completeHash.Length == 0)
+//                 return new Error(ErrorCode.EmptyData, "Hash key not found.");
 
-            return results!;
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to retrieve hash from Redis.");
-        }
-    }
+//             var results = completeHash
+//                 .Where(e => e.Value.HasValue)
+//                 .Select(e =>
+//                 {
+//                     try
+//                     {
+//                         byte[] convertedValue = (byte[])e.Value!;
+//                         return JsonSerializer.Deserialize<T>(convertedValue);
+//                     }
+//                     catch { return default; }
+//                 })
+//                 .Where(item => item != null)
+//                 .ToList();
 
-    public async Task<BaseResult> RemoveFromHash(string hashKey, string entryKey)
-    {
-        try
-        {
-            var exist = await _database.HashExistsAsync(hashKey, entryKey);
-            if (!exist)
-                return new Error(ErrorCode.EmptyData, "Entry does not exist in hash.");
+//             return results!;
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to retrieve hash from Redis.");
+//         }
+//     }
 
-            var result = await _database.HashDeleteAsync(hashKey, entryKey);
-            return result ? BaseResult.Ok() : BaseResult.Failure();
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to remove entry from hash.");
-        }
-    }
+//     public async Task<BaseResult> RemoveFromHash(string hashKey, string entryKey)
+//     {
+//         try
+//         {
+//             var exist = await _database.HashExistsAsync(hashKey, entryKey);
+//             if (!exist)
+//                 return new Error(ErrorCode.EmptyData, "Entry does not exist in hash.");
 
-    public async Task<BaseResult> RemoveByKey(string key)
-    {
-        try
-        {
-            var exist = await _database.KeyExistsAsync(key);
-            if (!exist)
-                return new Error(ErrorCode.EmptyData, "key does not exist.");
+//             var result = await _database.HashDeleteAsync(hashKey, entryKey);
+//             return result ? BaseResult.Ok() : BaseResult.Failure();
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to remove entry from hash.");
+//         }
+//     }
 
-            var result = await _database.KeyDeleteAsync(key);
-            return result ? BaseResult.Ok() : BaseResult.Failure();
-        }
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to remove key.");
-        }
-    }
+//     public async Task<BaseResult> RemoveByKey(string key)
+//     {
+//         try
+//         {
+//             var exist = await _database.KeyExistsAsync(key);
+//             if (!exist)
+//                 return new Error(ErrorCode.EmptyData, "key does not exist.");
 
-    public async Task<BaseResult> SetHash<T>(string hashKey, IEnumerable<T> rows, Func<T, object> entryKeySelector, TimeSpan expireTime)
-    {
-        if (rows == null || !rows.Any())
-            return new Error(ErrorCode.EmptyData, "null or empty data");
+//             var result = await _database.KeyDeleteAsync(key);
+//             return result ? BaseResult.Ok() : BaseResult.Failure();
+//         }
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to remove key.");
+//         }
+//     }
 
-        var hashEntries = rows
-            .Select(row => new HashEntry(entryKeySelector(row).ToString(), JsonSerializer.Serialize(row)))
-            .ToArray();
+//     public async Task<BaseResult> SetHash<T>(string hashKey, IEnumerable<T> rows, Func<T, object> entryKeySelector, TimeSpan expireTime)
+//     {
+//         if (rows == null || !rows.Any())
+//             return new Error(ErrorCode.EmptyData, "null or empty data");
 
-        await _database.HashSetAsync(hashKey, hashEntries);
+//         var hashEntries = rows
+//             .Select(row => new HashEntry(entryKeySelector(row).ToString(), JsonSerializer.Serialize(row)))
+//             .ToArray();
 
-        var result = _database.KeyExpire(hashKey, expireTime);
-        return result ? BaseResult.Ok() : BaseResult.Failure();
-    }
+//         await _database.HashSetAsync(hashKey, hashEntries);
 
-    public async Task<BaseResult<T?>> GetFromHash<T>(string hashKey, string entryKey)
-    {
-        var value = await _database.HashGetAsync(hashKey, entryKey);
-        if (value.IsNull)
-            return new Error(ErrorCode.EmptyData, "null or empty data");
+//         var result = _database.KeyExpire(hashKey, expireTime);
+//         return result ? BaseResult.Ok() : BaseResult.Failure();
+//     }
 
-        return JsonSerializer.Deserialize<T>(value!);
-    }
+//     public async Task<BaseResult<T?>> GetFromHash<T>(string hashKey, string entryKey)
+//     {
+//         var value = await _database.HashGetAsync(hashKey, entryKey);
+//         if (value.IsNull)
+//             return new Error(ErrorCode.EmptyData, "null or empty data");
 
-    public async Task<BaseResult> RemoveAllByPrefix(string prefix)
-    {
-        try
-        {
-            foreach (var endpoint in _database.Multiplexer.GetEndPoints())
-            {
-                var server = _database.Multiplexer.GetServer(endpoint);
-                var keys = server.Keys(pattern: $"{prefix}:*");
+//         byte[] convertedValue = (byte[])value!;
 
-                foreach (var key in keys)
-                {
-                    var result = await _database.KeyDeleteAsync(key);
-                    if (!result)
-                    {
-                        return new Error(ErrorCode.Exception, $"Failed to remove the key: {key} .");
-                    }
-                }
-            }
+//         return JsonSerializer.Deserialize<T>(convertedValue);
+//     }
 
-            return BaseResult.Ok();
-        }
+//     public async Task<BaseResult> RemoveAllByPrefix(string prefix)
+//     {
+//         try
+//         {
+//             foreach (var endpoint in _database.Multiplexer.GetEndPoints())
+//             {
+//                 var server = _database.Multiplexer.GetServer(endpoint);
+//                 var keys = server.Keys(pattern: $"{prefix}:*");
 
-        catch
-        {
-            return new Error(ErrorCode.Exception, "Failed to remove key.");
-        }
-    }
+//                 foreach (var key in keys)
+//                 {
+//                     var result = await _database.KeyDeleteAsync(key);
+//                     if (!result)
+//                     {
+//                         return new Error(ErrorCode.Exception, $"Failed to remove the key: {key} .");
+//                     }
+//                 }
+//             }
 
-    public async Task DeleteKeysByPattern(string pattern)
-    {
-        var server = _database.Multiplexer.GetServer(_database.Multiplexer.GetEndPoints().First());
+//             return BaseResult.Ok();
+//         }
 
-        // Use SCAN to find keys matching the pattern
-        var keys = server.Keys(pattern: pattern);
+//         catch
+//         {
+//             return new Error(ErrorCode.Exception, "Failed to remove key.");
+//         }
+//     }
 
-        // Delete each key
-        foreach (var key in keys)
-        {
-            await _database.KeyDeleteAsync(key);
-        }
-    }
-}
+//     public async Task DeleteKeysByPattern(string pattern)
+//     {
+//         var server = _database.Multiplexer.GetServer(_database.Multiplexer.GetEndPoints().First());
+
+//         // Use SCAN to find keys matching the pattern
+//         var keys = server.Keys(pattern: pattern);
+
+//         // Delete each key
+//         foreach (var key in keys)
+//         {
+//             await _database.KeyDeleteAsync(key);
+//         }
+//     }
+// }

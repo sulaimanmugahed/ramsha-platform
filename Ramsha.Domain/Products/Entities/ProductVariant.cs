@@ -1,3 +1,4 @@
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory.Entities;
 using Ramsha.Domain.Products.Enums;
@@ -6,7 +7,7 @@ using Ramsha.Domain.Suppliers.Entities;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class ProductVariant : BaseEntity
+public class ProductVariant : Entity
 {
     private ProductVariant()
     {
@@ -102,5 +103,8 @@ public class ProductVariant : BaseEntity
         return Math.Max(Weight, Dimensions.Calculate()) * quantity;
     }
 
-
+    public override object GetId()
+    {
+        return new { ProductId, Id };
+    }
 }

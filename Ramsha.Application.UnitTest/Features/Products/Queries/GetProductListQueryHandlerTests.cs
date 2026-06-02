@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
 using Ramsha.Application.Contracts.Persistence;
-using Ramsha.Application.Features.Products.Queries.GetProductList;
 using Ramsha.Application.UnitTest.Mocks;
 using Moq;
 
 
 namespace Ramsha.Application.UnitTest.Features.Products.Queries;
+
 public class GetProductListQueryHandlerTests
 {
 

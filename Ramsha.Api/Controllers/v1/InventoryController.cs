@@ -25,8 +25,8 @@ public class InventoryController : BaseApiController
     /// This endpoint returns a paginated list of inventory items based on the provided query parameters.
     /// </remarks>
     [HttpPost("paged")]
-    public async Task<BaseResult<List<InventoryItemDto>>> GetInventoryPaged([FromBody] GetInventoryItemsQuery query)
-        => await Mediator.Send(query);
+    public async Task<ActionResult<List<InventoryItemDto>>> GetInventoryPaged([FromBody] GetInventoryItemsQuery query)
+        => await Query(query);
 
     /// <summary>
     /// Changes the stock strategy for inventory items.
@@ -35,8 +35,8 @@ public class InventoryController : BaseApiController
     /// This endpoint updates the stock strategy (e.g., FIFO, LIFO) used for managing inventory items.
     /// </remarks>
     [HttpPost("change-stock-strategy")]
-    public async Task<BaseResult> ChangeStockStrategy(ChangeStockStrategyCommand command)
-        => await Mediator.Send(command);
+    public async Task<ActionResult> ChangeStockStrategy(ChangeStockStrategyCommand command)
+        => await Command(command);
 
     /// <summary>
     /// Applies a discount to a specific inventory item.
@@ -45,6 +45,6 @@ public class InventoryController : BaseApiController
     /// This endpoint applies a discount to an inventory item identified by its unique ID.
     /// </remarks>
     [HttpPost("{id}/discount")]
-    public async Task<BaseResult> ApplyInventoryItemDiscount([FromRoute] Guid id, DiscountRequest discountRequest)
-        => await Mediator.Send(new ApplyInventoryItemDiscountCommand { InventoryItemId = id, Discount = discountRequest });
+    public async Task<ActionResult> ApplyInventoryItemDiscount([FromRoute] Guid id, DiscountRequest discountRequest)
+        => await Command(new ApplyInventoryItemDiscountCommand { InventoryItemId = id, Discount = discountRequest });
 }

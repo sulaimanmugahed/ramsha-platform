@@ -1,13 +1,13 @@
 
 using Ramsha.Application.Dtos.Inventory;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Inventory.Queries.GetInventoryItems;
 
-public class GetInventoryItemsQuery : IRequest<BaseResult<List<InventoryItemDto>>>
+public class GetInventoryItemsQuery : IRamshaQuery
 {
-    public PaginationParams? PaginationParams { get; set; }
+    public Ramsha.Application.Wrappers.PaginationParams? PaginationParams { get; set; }
     public SortingParams? SortingParams { get; set; }
     public FilterParams? FilterParams { get; set; }
 }

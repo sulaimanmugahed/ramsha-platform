@@ -1,30 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.UpdateProductVariant;
 
 public class ChangeProductStatusCommandHandler(
-IProductRepository productRepository,
-IUnitOfWork unitOfWork
-) : IRequestHandler<ChangeProductStatusCommand, BaseResult>
+IProductRepository productRepository
+) : RamshaCommandHandler<ChangeProductStatusCommand>
 {
-    public async Task<BaseResult> Handle(ChangeProductStatusCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(ChangeProductStatusCommand request, CancellationToken cancellationToken)
     {
-        var product = await productRepository.GetByIdAsync(new Domain.Products.ProductId(request.ProductId));
+        var product = await productRepository.FindAsync(new Domain.Products.ProductId(request.ProductId));
         if (product is null)
-            return new Error(ErrorCode.RequestedDataNotExist);
+            return Invalid(message: "no product was found");
 
         product.SetStatus(request.Status);
         product.Update();
-        
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

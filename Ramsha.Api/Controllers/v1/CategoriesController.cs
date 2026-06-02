@@ -23,8 +23,8 @@ public class CategoriesController : BaseApiController
     /// Returns the ID of the newly created category.
     /// </remarks>
     [HttpPost]
-    public async Task<BaseResult<string>> CreateCategory([FromBody] CreateCategoryCommand command)
-        => await Mediator.Send(command);
+    public async Task<ActionResult<string>> CreateCategory([FromBody] CreateCategoryCommand command)
+        => await Command(command);
 
     /// <summary>
     /// Retrieves all categories.
@@ -33,8 +33,8 @@ public class CategoriesController : BaseApiController
     /// This endpoint returns a list of all available categories in the system.
     /// </remarks>
     [HttpGet]
-    public async Task<BaseResult<List<CategoryDto>>> GetCategories()
-        => await Mediator.Send(new GetCategoriesQuery());
+    public async Task<ActionResult<List<CategoryDto>>> GetCategories()
+        => await Query(new GetCategoriesQuery());
 
     /// <summary>
     /// Deletes a category by ID.
@@ -43,8 +43,8 @@ public class CategoriesController : BaseApiController
     /// This endpoint deletes a category identified by its unique ID.
     /// </remarks>
     [HttpDelete("{id}")]
-    public async Task<BaseResult> Remove(Guid id)
-        => await Mediator.Send(new RemoveCategoryCommand { Id = id });
+    public async Task<ActionResult> Remove(Guid id)
+        => await Command(new RemoveCategoryCommand { Id = id });
 
     /// <summary>
     /// Updates an existing category.
@@ -53,10 +53,10 @@ public class CategoriesController : BaseApiController
     /// This endpoint updates the details of an existing category identified by its ID.
     /// </remarks>
     [HttpPut("{id}")]
-    public async Task<BaseResult> Update(Guid id, UpdateCategoryCommand command)
+    public async Task<ActionResult> Update(Guid id, UpdateCategoryCommand command)
     {
         command.Id = id;
-        return await Mediator.Send(command);
+        return await Command(command);
     }
 
 }

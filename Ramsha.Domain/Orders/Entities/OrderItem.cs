@@ -2,9 +2,11 @@
 
 
 
+using Ramsha.Common.Domain;
+
 namespace Ramsha.Domain.Orders.Entities;
 
-public class OrderItem
+public class OrderItem : Entity<int>
 {
     public OrderItem(OrderId orderId, ProductItemOrdered itemOrdered, decimal price, int quantity, decimal markup)
     {
@@ -20,7 +22,6 @@ public class OrderItem
 
     }
 
-    public int Id { get; set; }
     public ProductItemOrdered ItemOrdered { get; set; }
     public OrderId OrderId { get; set; }
     public FulfillmentRequestId FulfillmentRequestId { get; set; }

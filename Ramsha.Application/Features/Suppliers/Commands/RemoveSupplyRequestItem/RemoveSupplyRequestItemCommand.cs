@@ -1,9 +1,9 @@
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.RemoveSupplyRequestItem;
 
-public class RemoveSupplyRequestItemCommand : IRequest<BaseResult>
+public class RemoveSupplyRequestItemCommand : IRamshaCommand
 {
     public Guid SupplyRequestItemId { get; set; }
 }

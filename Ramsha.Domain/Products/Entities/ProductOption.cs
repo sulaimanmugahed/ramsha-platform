@@ -1,9 +1,10 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class ProductOption : BaseEntity
+public class ProductOption : Entity
 {
     public ProductOption()
     {
@@ -28,5 +29,8 @@ public class ProductOption : BaseEntity
 
     public Product Product { get; set; }
 
-
+    public override object GetId()
+    {
+        return new { ProductId, OptionId };
+    }
 }

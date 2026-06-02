@@ -1,9 +1,10 @@
 ﻿using Ramsha.Application.Dtos.Baskets;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Baskets.Queries.GetBasket;
-public class GetBasketQuery : IRequest<BaseResult<BasketDto?>>
+
+public class GetBasketQuery : IRamshaQuery
 {
-    
+
 }

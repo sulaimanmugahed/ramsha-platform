@@ -1,24 +1,24 @@
 
-using MediatR;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Customers.Entities;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Customers.Queries.GetCurrentCustomerAddress;
 
 public class GetCurrentCustomerAddressQueryHandler(
     ICustomerRepository customerRepository,
     IAuthenticatedUserService authenticatedUserService
-) : IRequestHandler<GetCurrentCustomerAddressQuery, BaseResult<CustomerAddress?>>
+) : RamshaQueryHandler<GetCurrentCustomerAddressQuery>
 {
-    public async Task<BaseResult<CustomerAddress?>> Handle(GetCurrentCustomerAddressQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCurrentCustomerAddressQuery request, CancellationToken cancellationToken)
     {
-        var customer = await customerRepository.GetAsync(x => x.Username == authenticatedUserService.UserName, x => x.Address);
+        var customer = await customerRepository.FindAsync(x => x.Username == authenticatedUserService.UserName, [x => x.Address]);
         if (customer is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
-        return customer.Address;
+        return Success(customer.Address);
 
     }
 }

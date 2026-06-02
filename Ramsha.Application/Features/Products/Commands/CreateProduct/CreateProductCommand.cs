@@ -2,13 +2,12 @@
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
-using Ramsha.Domain.Products.Enums;
-using MediatR;
-using Microsoft.AspNetCore.Http;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Commands.CreateProduct;
 
-public class CreateProductCommand : IRequest<BaseResult<string?>>
+public class CreateProductCommand : IRamshaCommand
 {
     public string Name { get; set; }
     public string Description { get; set; }

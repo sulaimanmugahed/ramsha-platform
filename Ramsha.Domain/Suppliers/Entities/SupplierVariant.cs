@@ -1,4 +1,5 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory.Entities;
 using Ramsha.Domain.Products;
@@ -6,7 +7,7 @@ using Ramsha.Domain.Products.Entities;
 
 namespace Ramsha.Domain.Suppliers.Entities;
 
-public class SupplierVariant : BaseEntity
+public class SupplierVariant : Entity
 {
     private SupplierVariant(SupplierId supplierId, ProductId productId, ProductVariantId productVariantId)
     {
@@ -33,7 +34,7 @@ public class SupplierVariant : BaseEntity
     public string Description { get; private set; }
     public decimal WholesalePrice { get; private set; }
     public decimal RetailPrice { get; private set; }
-   
+
 
     public void SetVariant(ProductVariantId productVariantId)
     {
@@ -120,5 +121,8 @@ public class SupplierVariant : BaseEntity
         return wholePrice + markupAmount;
     }
 
-
+    public override object GetId()
+    {
+        throw new NotImplementedException();
+    }
 }

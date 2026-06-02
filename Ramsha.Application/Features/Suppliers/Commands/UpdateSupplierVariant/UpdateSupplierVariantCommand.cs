@@ -1,11 +1,11 @@
 
-using MediatR;
 using Ramsha.Application.Dtos.Common;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.UpdateSupplierVariant;
 
-public class UpdateSupplierVariantCommand : IRequest<BaseResult>
+public class UpdateSupplierVariantCommand : IRamshaCommand
 {
     public Guid ProductId { get; set; }
     public Guid VariantId { get; set; }

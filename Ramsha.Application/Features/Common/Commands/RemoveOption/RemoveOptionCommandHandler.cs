@@ -5,30 +5,29 @@ using System.Threading.Tasks;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
+
 
 namespace Ramsha.Application.Features.Common.Commands.RemoveOption;
 
 public class RemoveOptionCommandHandler(
     IOptionRepository optionRepository,
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork)
- : IRequestHandler<RemoveOptionCommand, BaseResult>
+    IProductRepository productRepository)
+ : RamshaCommandHandler<RemoveOptionCommand>
 {
-    public async Task<BaseResult> Handle(RemoveOptionCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(RemoveOptionCommand request, CancellationToken cancellationToken)
     {
         var optionId = new Domain.Products.OptionId(request.OptionId);
 
-        var option = await optionRepository.GetByIdAsync(optionId);
+        var option = await optionRepository.FindAsync(optionId);
         if (option is null)
-            return new Error(ErrorCode.EmptyData, "No option found");
+            return NotFound(message: "No option found");
 
         var exist = await productRepository.IsOptionExist(optionId);
         if (exist)
-            return new Error(ErrorCode.ModelStateNotValid, "There are some variants take this option");
+            return Invalid(message: "There are some variants take this option");
 
-        optionRepository.Delete(option);
-        await unitOfWork.SaveChangesAsync();
-        return BaseResult.Ok();
+        await optionRepository.DeleteAsync(option);
+        return Success();
     }
 }

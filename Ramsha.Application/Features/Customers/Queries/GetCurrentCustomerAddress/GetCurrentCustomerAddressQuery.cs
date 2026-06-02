@@ -1,10 +1,9 @@
-using MediatR;
-using Ramsha.Application.Wrappers;
-using Ramsha.Domain.Customers.Entities;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Customers.Queries.GetCurrentCustomerAddress;
 
-public class GetCurrentCustomerAddressQuery : IRequest<BaseResult<CustomerAddress?>>
+public class GetCurrentCustomerAddressQuery : IRamshaQuery
 {
 
 }

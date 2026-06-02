@@ -1,33 +1,32 @@
 
-using MediatR;
-using Ramsha.Application.Contracts.BackgroundJobs;
-using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Catalog;
 using Ramsha.Application.Helpers;
 using Ramsha.Application.Wrappers;
+using Ramsha.Caching;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Catalog.Queries.GetCatalogProductVariant;
 
 public class GetCatalogProductVariantQueryHandler(
     IProductRepository productRepository,
-    ICacheService redisCacheService,
-    IBackgroundJobService backgroundJobService
-) : IRequestHandler<GetCatalogProductVariantQuery, BaseResult<CatalogVariantDto?>>
+    IRamshaCache redisCacheService
+) : RamshaQueryHandler<GetCatalogProductVariantQuery>
 {
-    public async Task<BaseResult<CatalogVariantDto?>> Handle(GetCatalogProductVariantQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCatalogProductVariantQuery request, CancellationToken cancellationToken)
     {
         var key = CacheKeysHelper.CatalogCacheKeys.GetCatalogVariantKey(request.ProductId.ToString(), request.ProductVariantId.ToString());
-        var catalogVariantDto = await redisCacheService.GetObject<CatalogVariantDto>(key);
-        if (catalogVariantDto is null)
-        {
-            catalogVariantDto = await productRepository.GetCatalogProductVariant(
+        var catalogVariantDto = await redisCacheService.GetOrCreateAsync<CatalogVariantDto>(
+            key,
+            async (ct) => await productRepository.GetCatalogProductVariant(
                         new Domain.Products.ProductId(request.ProductId),
                         request.ProductVariantId.HasValue ? new Domain.Products.ProductVariantId(request.ProductVariantId.Value) : null
-                        );
+                        ),
+                        new RamshaCacheEntryOptions
+                        {
+                            Expiration = TimeSpan.FromHours(1)
+                        }, [CacheKeysHelper.ProductCacheKeys.Tag + request.ProductId]);
 
-            backgroundJobService.Enqueue(() => redisCacheService.SetObject(key, catalogVariantDto, TimeSpan.FromHours(1)));
-        }
-        return catalogVariantDto;
+        return Success(catalogVariantDto);
     }
 }

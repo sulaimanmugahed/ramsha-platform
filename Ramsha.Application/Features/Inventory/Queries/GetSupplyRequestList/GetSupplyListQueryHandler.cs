@@ -3,18 +3,18 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Suppliers;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
 using Ramsha.Application.Dtos.Supplies;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Inventory.Queries.GetSupplyRequestList;
 
 public class GetSupplyRequestListQueryHandler(
     ISupplyRepository supplyRepository
-) : IRequestHandler<GetSupplyListQuery, BaseResult<List<SupplyDto>>>
+) : RamshaQueryHandler<GetSupplyListQuery>
 {
-    public async Task<BaseResult<List<SupplyDto>>> Handle(GetSupplyListQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetSupplyListQuery request, CancellationToken cancellationToken)
     {
         var supplyRequests = await supplyRepository.FindAllWithDetail(x => x.Status == request.Status);
-        return supplyRequests.Select(sr => sr.AsSupplyDto()).ToList();
+        return Success(supplyRequests.Select(sr => sr.AsSupplyDto()).ToList());
     }
 }

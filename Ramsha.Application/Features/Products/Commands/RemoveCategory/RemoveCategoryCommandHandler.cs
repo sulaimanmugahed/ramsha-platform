@@ -1,29 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.RemoveCategory;
 
 public class RemoveCategoryCommandHandler(
-    ICategoryRepository categoryRepository,
-    IUnitOfWork unitOfWork
-) : IRequestHandler<RemoveCategoryCommand, BaseResult>
+    ICategoryRepository categoryRepository
+) : RamshaCommandHandler<RemoveCategoryCommand>
 {
-    public async Task<BaseResult> Handle(RemoveCategoryCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(RemoveCategoryCommand request, CancellationToken cancellationToken)
     {
-        var category = await categoryRepository.GetByIdAsync(new Domain.Products.CategoryId(request.Id));
+        var category = await categoryRepository.FindAsync(new Domain.Products.CategoryId(request.Id));
         if (category is null)
-            return new Error(ErrorCode.RequestedDataNotExist);
+            return Invalid(message: "no category was found");
 
-        categoryRepository.Delete(category);
+        await categoryRepository.DeleteAsync(category);
 
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

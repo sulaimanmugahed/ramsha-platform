@@ -1,9 +1,9 @@
 
-using MediatR;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.UpdateSupplierVariant;
 
@@ -11,16 +11,15 @@ public class UpdateSupplierVariantCommandHandler(
 ISupplierRepository supplierRepository,
 ISupplierProductRepository supplierProductRepository,
 IAuthenticatedUserService authenticatedUserService,
-IStorageService storageService,
-IUnitOfWork unitOfWork
-) : IRequestHandler<UpdateSupplierVariantCommand, BaseResult>
+IStorageService storageService
+) : RamshaCommandHandler<UpdateSupplierVariantCommand>
 {
-    public async Task<BaseResult> Handle(UpdateSupplierVariantCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(UpdateSupplierVariantCommand request, CancellationToken cancellationToken)
     {
-        var supplier = await supplierRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var supplier = await supplierRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (supplier is null)
         {
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
         }
 
         var variant = await supplierProductRepository.GetVariantDetail(
@@ -30,7 +29,7 @@ IUnitOfWork unitOfWork
 
         if (variant is null)
         {
-            return new Error(ErrorCode.RequestedDataNotExist, "no variant found");
+            return Invalid(message: "no variant found");
         }
 
         variant.SetDescription(request.Description);
@@ -51,7 +50,7 @@ IUnitOfWork unitOfWork
                 {
                     var isDeleted = await storageService.DeleteFile(imageToRemove.Path);
                     if (!isDeleted)
-                        return new Error(ErrorCode.Exception, "we couldn't remove the image file");
+                        return Invalid(message: "we couldn't remove the image file");
 
                     variant.RemoveImage(imageToRemove);
                 }
@@ -71,8 +70,7 @@ IUnitOfWork unitOfWork
             }
         }
 
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

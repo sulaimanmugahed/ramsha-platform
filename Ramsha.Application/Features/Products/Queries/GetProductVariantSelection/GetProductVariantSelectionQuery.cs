@@ -1,11 +1,9 @@
 
-using MediatR;
-using Ramsha.Application.Dtos.Products;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Queries.GetProductVariantSelection;
 
-public class GetProductVariantSelectionQuery : IRequest<BaseResult<ProductVariantSelectionDto?>>
+public class GetProductVariantSelectionQuery : IRamshaQuery
 {
     public Guid ProductId { get; set; }
     public bool IsCatalog { get; set; }

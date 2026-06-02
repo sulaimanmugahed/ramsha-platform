@@ -12,17 +12,19 @@ using Microsoft.EntityFrameworkCore;
 using Ramsha.Application.Constants;
 
 namespace Ramsha.Identity.Services;
+
 public class UserService(UserManager<Account> userManager, RoleManager<ApplicationRole> roleManager) : IUserService
 {
-	public async Task<BaseResult> DeleteAccount(string username)
+	public async Task<IRamshaResult> DeleteAccount(string username)
 	{
 		var user = await userManager.FindByNameAsync(username);
 		if (user is null)
-			return new Error(ErrorCode.NotFound);
+			return RamshaResults.NotFound();
+
 
 		await userManager.DeleteAsync(user);
 
-		return BaseResult.Ok();
+		return RamshaResults.Success();
 	}
 
 	public async Task<Address?> GetUserAddress(string userName)
@@ -42,11 +44,12 @@ public class UserService(UserManager<Account> userManager, RoleManager<Applicati
 	}
 
 
-	public async Task<BaseResult<AccountDto>> GetAccount(string username)
+	public async Task<RamshaResult<AccountDto>> GetAccount(string username)
 	{
 		var account = await userManager.FindByNameAsync(username);
 		if (account is null)
-			return new Error(ErrorCode.NotFound);
+			return RamshaResults.NotFound();
+
 
 		return new AccountDto(
 			account.Id,
@@ -55,7 +58,7 @@ public class UserService(UserManager<Account> userManager, RoleManager<Applicati
 	}
 
 
-	public async Task<BaseResult<RegisterResponse>> CreateAccount(RegisterRequest request, string roleName = Roles.Customer, List<PermissionType>? permissions = null, bool emailConfirmed = false, bool phoneNumberConfirmed = false)
+	public async Task<RamshaResult<RegisterResponse>> CreateAccount(RegisterRequest request, string roleName = Roles.Customer, List<PermissionType>? permissions = null, bool emailConfirmed = false, bool phoneNumberConfirmed = false)
 	{
 		var account = new Account
 		{
@@ -71,20 +74,24 @@ public class UserService(UserManager<Account> userManager, RoleManager<Applicati
 
 		if (!result.Succeeded)
 		{
-			var errors = result.Errors.Select(e => new Error(ErrorCode.NotFound, e.Description)).ToList();
-			return new List<Error>(errors);
+			// var errors = result.Errors.Select(e => new Error(ErrorCode.NotFound, e.Description)).ToList();
+			// return new List<Error>(errors);
+
+			return RamshaResults.Invalid(message: result.Errors.FirstOrDefault()?.Description);
 		}
 
 
 		var role = await roleManager.Roles.Include(x => x.Permissions).FirstOrDefaultAsync(x => x.Name == roleName);
 		if (role is null)
-			return new Error(ErrorCode.EmptyData);
+			return RamshaResults.Invalid(message: "EmptyData");
 
 		var addToRoleResult = await userManager.AddToRoleAsync(account, roleName);
 		if (!addToRoleResult.Succeeded)
 		{
-			var addToRoleError = addToRoleResult.Errors.Select(e => new Error(ErrorCode.NotFound, e.Description)).ToList();
-			return new List<Error>(addToRoleError);
+			// var addToRoleError = addToRoleResult.Errors.Select(e => new Error(ErrorCode.NotFound, e.Description)).ToList();
+			// return new List<Error>(addToRoleError);
+			return RamshaResults.Invalid(message: addToRoleResult.Errors.FirstOrDefault()?.Description);
+
 		}
 
 		if (permissions is not null)
@@ -103,7 +110,7 @@ public class UserService(UserManager<Account> userManager, RoleManager<Applicati
 		return new RegisterResponse { Id = account.Id };
 	}
 
-	public async Task<BaseResult<List<AccountDto>>> GetAccounts(string? roleName = null)
+	public async Task<RamshaResult<List<AccountDto>>> GetAccounts(string? roleName = null)
 	{
 		var accounts = roleName is null ? await userManager.Users.ToListAsync() : await userManager.GetUsersInRoleAsync(roleName);
 		return accounts.Select(x => new AccountDto(x.Id, x.UserName, x.Email)).ToList();

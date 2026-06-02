@@ -1,33 +1,33 @@
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.AddSupplierProduct;
 
 public class AddSupplierProductCommandHandler(
     ISupplierRepository supplierRepository,
-    IUnitOfWork unitOfWork,
     ISupplierProductRepository supplierProductRepository,
     IProductRepository productRepository,
     IAuthenticatedUserService authenticatedUserService,
     ICodeGenerator codeGenerator
 
-) : IRequestHandler<AddSupplierProductCommand, BaseResult>
+) : RamshaCommandHandler<AddSupplierProductCommand>
 {
-    public async Task<BaseResult> Handle(AddSupplierProductCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(AddSupplierProductCommand request, CancellationToken cancellationToken)
     {
         var productId = new Domain.Products.ProductId(request.ProductId);
-        var supplier = await supplierRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var supplier = await supplierRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (supplier is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
-        var product = await productRepository.GetByIdAsync(productId);
+        var product = await productRepository.FindAsync(productId);
 
         if (product is null)
         {
-            return new Error(ErrorCode.RequestedDataNotExist, "invalid product id");
+            return Invalid(message: "invalid product id");
         }
 
         var supplierProduct = SupplierProduct.Create(product.Id, supplier.Id);
@@ -36,8 +36,7 @@ public class AddSupplierProductCommandHandler(
 
         await supplierProductRepository.AddAsync(supplierProduct);
 
-        await unitOfWork.SaveChangesAsync();
-        return BaseResult.Ok();
+        return Success();
 
     }
 }

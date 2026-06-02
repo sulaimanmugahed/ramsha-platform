@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Services;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Ramsha.Domain.Settings;
@@ -15,7 +14,6 @@ public static class ServiceRegistration
     public static IServiceCollection AddApplicationLayer(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddMediatR(x => x.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
         services.AddScoped<IVariantService, VariantService>();
         services.AddScoped<ICodeGenerator, CodeGenerator>();
@@ -23,7 +21,6 @@ public static class ServiceRegistration
         services.Configure<GlobalAppSettings>(configuration.GetSection(nameof(GlobalAppSettings)));
         services.AddScoped<DeliveryFeeService>();
         services.AddScoped<BasketService>();
-        services.AddScoped<ProductService>();
 
 
 

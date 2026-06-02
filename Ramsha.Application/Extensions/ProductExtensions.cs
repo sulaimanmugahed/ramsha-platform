@@ -107,7 +107,7 @@ public static class ProductExtensions
          product.Id.Value,
          product.Name,
          product.Description,
-         product.Created,
+         product.CreationDate,
          product.Status.ToString(),
          product.ImageUrl,
          product.Category.Name,

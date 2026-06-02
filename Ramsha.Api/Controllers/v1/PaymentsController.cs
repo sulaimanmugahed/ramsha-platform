@@ -24,7 +24,7 @@ namespace Ramsha.Api.Controllers.v1;
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Roles = Roles.Customer)]
-public class PaymentsController(IOptionsSnapshot<StripeSettings> settings, IOrderRepository orderRepository, IUnitOfWork unitOfWork) : BaseApiController
+public class PaymentsController(IOptionsSnapshot<StripeSettings> settings, IOrderRepository orderRepository) : BaseApiController
 {
     /// <summary>
     /// Creates or updates a payment intent.
@@ -33,8 +33,8 @@ public class PaymentsController(IOptionsSnapshot<StripeSettings> settings, IOrde
     /// This endpoint creates or updates a payment intent for the current user's basket.
     /// </remarks>
     [HttpPost]
-    public async Task<BaseResult<BasketDto>> CreateOrUpdatePaymentIntent(CreateOrUpdatePaymentIntentCommand command)
-        => await Mediator.Send(command);
+    public async Task<ActionResult<BasketDto>> CreateOrUpdatePaymentIntent(CreateOrUpdatePaymentIntentCommand command)
+        => await Command(command);
 
     /// <summary>
     /// Handles Stripe webhook events.
@@ -57,12 +57,11 @@ public class PaymentsController(IOptionsSnapshot<StripeSettings> settings, IOrde
 
         var charge = (Charge)stripeEvent.Data.Object;
 
-        var order = await orderRepository.GetAsync(x => x.PaymentIntentId == charge.PaymentIntentId, x => x.FulfillmentRequests);
+        var order = await orderRepository.FindAsync(x => x.PaymentIntentId == charge.PaymentIntentId, [x => x.FulfillmentRequests]);
 
         if (order is not null && charge.Status == "succeeded")
             order.ConfirmPaymentReceived();
 
-        await unitOfWork.SaveChangesAsync();
         return new EmptyResult();
     }
 }

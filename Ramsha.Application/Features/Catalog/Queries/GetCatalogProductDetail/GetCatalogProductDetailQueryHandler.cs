@@ -1,35 +1,33 @@
 
-using MediatR;
-using Ramsha.Application.Contracts.BackgroundJobs;
-using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Catalog;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Helpers;
 using Ramsha.Application.Wrappers;
+using Ramsha.Caching;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Catalog.Queries.GetCatalogProductDetail;
 
 public class GetCatalogProductDetailQueryHandler(
     IProductRepository productRepository,
-    ICacheService redisCacheService,
-    IBackgroundJobService backgroundJobService
-) : IRequestHandler<GetCatalogProductDetailQuery, BaseResult<CatalogProductDetailDto>>
+    IRamshaCache redisCacheService
+) : RamshaQueryHandler<GetCatalogProductDetailQuery>
 {
-    public async Task<BaseResult<CatalogProductDetailDto>> Handle(GetCatalogProductDetailQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCatalogProductDetailQuery request, CancellationToken cancellationToken)
     {
         var key = CacheKeysHelper.CatalogCacheKeys.GetProductDetailKey(request.ProductId.ToString());
 
-        var productDto = await redisCacheService.GetObject<CatalogProductDetailDto>(key);
-        if (productDto is null)
-        {
-            productDto = await productRepository.GetProductCatalogDetail(new Domain.Products.ProductId(request.ProductId));
-            if (productDto is null)
-                return new Error(ErrorCode.RequestedDataNotExist);
+        var productDto = await redisCacheService.GetOrCreateAsync<CatalogProductDetailDto>(
+            key,
+            async (ct) => await productRepository.GetProductCatalogDetail(new Domain.Products.ProductId(request.ProductId)),
+            new RamshaCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromHours(1)
+            }, [
+            CacheKeysHelper.ProductCacheKeys.Tag+request.ProductId,
+            CacheKeysHelper.InventoryCacheKeys.Tag+request.ProductId]);
 
-            backgroundJobService.Enqueue(() => redisCacheService.SetObject(key, productDto, TimeSpan.FromHours(1)));
-        }
-
-        return productDto;
+        return Success(productDto);
     }
 }

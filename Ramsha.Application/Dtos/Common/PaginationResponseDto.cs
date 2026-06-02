@@ -10,7 +10,7 @@ namespace Ramsha.Application.DTOs.Common
 
         public PaginationResponseDto() { }
 
-        public PaginationResponseDto(List<T> data, PaginationParams paginationParams, int totalCount)
+        public PaginationResponseDto(List<T> data, Ramsha.Application.Wrappers.PaginationParams paginationParams, int totalCount)
         {
             Data = data;
             MetaData = PagedMetaData.Create(paginationParams, totalCount);

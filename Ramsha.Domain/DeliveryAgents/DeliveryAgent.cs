@@ -1,10 +1,11 @@
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 
 namespace Ramsha.Domain.DeliveryAgents;
 
 public record DeliveryAgentId(Guid Value);
 
-public class DeliveryAgent : BaseEntity, IAuditable, ISoftDeletable, IUser
+public class DeliveryAgent : Entity<DeliveryAgentId>, IEntityCreation, IEntityModification, ISoftDeletable, IUser
 {
 
     private DeliveryAgent(DeliveryAgentId id, string username, string firstName, string lastName)
@@ -27,10 +28,11 @@ public class DeliveryAgent : BaseEntity, IAuditable, ISoftDeletable, IUser
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string Username { get; set; }
-    public Guid CreatedBy { get; set; }
-    public DateTime Created { get; set; }
-    public Guid? LastModifiedBy { get; set; }
-    public DateTime? LastModified { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime CreationDate { get; set; }
+    public string? UpdatedBy { get; set; }
+    public DateTime? LastUpdateDate { get; set; }
+
     public bool IsDeleted { get; set; }
     public DateTime? Deleted { get; set; }
     public Guid? DeletedBy { get; set; }

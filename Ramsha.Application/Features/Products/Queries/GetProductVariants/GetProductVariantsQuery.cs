@@ -1,11 +1,11 @@
 
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Queries.GetProductVariants;
 
-public class GetProductVariantsQuery : IRequest<BaseResult<List<ProductVariantDto?>>>
+public class GetProductVariantsQuery : IRamshaQuery
 {
     public Guid ProductId { get; set; }
 

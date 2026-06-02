@@ -17,6 +17,7 @@ using Ramsha.Application.DTOs.Account.Requests;
 using System.Security.Claims;
 using Ramsha.Application.Dtos.Account.Requests;
 using Ramsha.Application.Constants;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 
 namespace Ramsha.Api.Controllers.v1;
@@ -25,7 +26,7 @@ namespace Ramsha.Api.Controllers.v1;
 /// Manages account-related operations.
 /// </summary>
 [ApiVersion("1.0")]
-public class AccountController(IStorageService storageService, IAuthenticatedUserService authenticatedUserService, IAccountServices accountServices) : BaseApiController
+public class AccountController(IAuthenticatedUserService authenticatedUserService, IAccountServices accountServices) : BaseApiController
 {
 
 	/// <summary>
@@ -35,8 +36,8 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint authenticates the user and provides an access token for subsequent requests.
 	/// </remarks>
 	[HttpPost("login")]
-	public async Task<BaseResult<AuthenticatedUserDto?>> Login([FromBody] LoginCommand command)
-	=> await Mediator.Send(command);
+	public async Task<ActionResult<AuthenticatedUserDto?>> Login([FromBody] LoginCommand command)
+	=> await Command(command);
 
 	/// <summary>
 	/// Refresh the token
@@ -46,8 +47,8 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// </remarks>
 
 	[HttpPost("refresh")]
-	public async Task<BaseResult<AuthenticatedUserDto?>> Refresh([FromBody] RefreshCommand command)
-		=> await Mediator.Send(command);
+	public async Task<ActionResult<AuthenticatedUserDto?>> Refresh([FromBody] RefreshCommand command)
+		=> await Command(command);
 
 
 
@@ -58,8 +59,8 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint invalidates the refresh token, terminating the session and preventing further token generation.
 	/// </remarks>
 	[HttpDelete("revoke")]
-	public async Task<BaseResult> Revoke(RevokeCommand command)
-		=> await Mediator.Send(command);
+	public async Task<IActionResult> Revoke(RevokeCommand command)
+		=> await Command(command);
 
 
 	/// <summary>
@@ -69,8 +70,8 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint ends the user session by invalidating both the access and refresh tokens.
 	/// </remarks>
 	[HttpPost("logout")]
-	public async Task<BaseResult> LogoutUser(LogoutCommand command)
-	=> await Mediator.Send(command);
+	public async Task<IActionResult> LogoutUser(LogoutCommand command)
+	=> await Command(command);
 
 
 	/// <summary>
@@ -80,8 +81,8 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint create or update the user address.
 	/// </remarks>
 	[HttpPut("address")]
-	public async Task<BaseResult> UpdateAddress(UpdateAddressCommand command)
-	=> await Mediator.Send(command);
+	public async Task<IActionResult> UpdateAddress(UpdateAddressCommand command)
+	=> await Command(command);
 
 
 	/// <summary>
@@ -91,13 +92,13 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint send confirm email link to email provided.
 	/// </remarks>
 	[HttpPost("send-confirm-email")]
-	public async Task<BaseResult> SendConfirmEmail([FromQuery] string email)
+	public async Task<IActionResult> SendConfirmEmail([FromQuery] string email)
 	{
 		var result = await accountServices.SendConfirmEmail(email);
 		if (!result)
-			return new Error(ErrorCode.Exception, "some thing went wrong,we couldn't send confirm email");
+			return BadRequest("some thing went wrong,we couldn't send confirm email");
 
-		return BaseResult.Ok();
+		return Ok();
 	}
 
 	/// <summary>
@@ -107,11 +108,11 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint verify and confirm the email by providing the confirm email token
 	/// </remarks>
 	[HttpGet("verify-email")]
-	public async Task<BaseResult<string>> VerifyEmail(string email, string token)
+	public async Task<ActionResult<string>> VerifyEmail(string email, string token)
 	{
 		var result = await accountServices.VerifyEmail(email, token);
 		if (!result)
-			return new Error(ErrorCode.Exception, "some thing went wrong,we couldn't send confirm email");
+			return BadRequest("some thing went wrong,we couldn't send confirm email");
 
 		return email;
 	}
@@ -124,14 +125,14 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// </remarks>
 	[Authorize]
 	[HttpPost("change-password")]
-	public async Task<BaseResult> ChangePassword(ChangePasswordRequest request)
+	public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
 	{
 		var result = await accountServices.ChangePassword(User.Identity.Name, request);
 		if (!result)
 		{
-			return new Error(ErrorCode.Exception, "some thing went wrong,we couldn't Change your Password");
+			return BadRequest("some thing went wrong,we couldn't Change your Password");
 		}
-		return BaseResult.Ok();
+		return Ok();
 	}
 
 	/// <summary>
@@ -142,14 +143,14 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// </remarks>
 	[Authorize]
 	[HttpPost("reset-password")]
-	public async Task<BaseResult> ResetPassword(ResetPasswordRequest request)
+	public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
 	{
 		var result = await accountServices.ResetPassword(User.Identity.Name, request);
 		if (!result)
 		{
-			return new Error(ErrorCode.Exception, "some thing went wrong,we couldn't Change your Password");
+			return BadRequest("some thing went wrong,we couldn't Change your Password");
 		}
-		return BaseResult.Ok();
+		return Ok();
 	}
 
 	/// <summary>
@@ -159,12 +160,12 @@ public class AccountController(IStorageService storageService, IAuthenticatedUse
 	/// This endpoint sends a password reset link to the email provided.
 	/// </remarks>
 	[HttpPost("send-reset-password-email")]
-	public async Task<BaseResult> SendResetPasswordEmail()
+	public async Task<IActionResult> SendResetPasswordEmail()
 	{
 		var result = await accountServices.SendResetPasswordEmail(authenticatedUserService.UserName);
 		if (!result)
-			return new Error(ErrorCode.Exception, "some thing went wrong,we couldn't send Reset Password Email");
-		return BaseResult.Ok();
+			return BadRequest("some thing went wrong,we couldn't send Reset Password Email");
+		return Ok();
 	}
 
 

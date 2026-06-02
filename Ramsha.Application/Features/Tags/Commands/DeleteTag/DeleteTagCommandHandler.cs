@@ -1,29 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Tags.Commands.DeleteTag;
 
 public class DeleteTagCommandHandler(
-        ITagRepository tagRepository,
-    IUnitOfWork unitOfWork
-) : IRequestHandler<DeleteTagCommand, BaseResult>
+        ITagRepository tagRepository
+) : RamshaCommandHandler<DeleteTagCommand>
 {
-    public async Task<BaseResult> Handle(DeleteTagCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(DeleteTagCommand request, CancellationToken cancellationToken)
     {
-        var existTag = await tagRepository.GetByIdAsync(new TagId(request.Id));
+        var existTag = await tagRepository.FindAsync(new TagId(request.Id));
         if (existTag is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no tag with this id");
+            return Invalid(message: "no tag with this id");
 
-        tagRepository.Delete(existTag);
-        await unitOfWork.SaveChangesAsync();
+        await tagRepository.DeleteAsync(existTag);
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

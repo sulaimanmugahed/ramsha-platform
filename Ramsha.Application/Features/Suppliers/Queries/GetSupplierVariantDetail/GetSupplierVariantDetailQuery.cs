@@ -1,12 +1,10 @@
 
-using MediatR;
-using Ramsha.Application.Dtos.Catalog;
-using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetSupplierVariantDetail;
 
-public class GetSupplierVariantDetailQuery : IRequest<BaseResult<CatalogSupplierItemDetailDto>>
+public class GetSupplierVariantDetailQuery : IRamshaQuery
 {
-    
+
 
 }

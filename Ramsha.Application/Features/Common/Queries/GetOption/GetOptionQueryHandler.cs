@@ -6,19 +6,19 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Common;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Common.Queries.GetOption;
 
 public class GetOptionQueryHandler(IOptionRepository optionRepository)
- : IRequestHandler<GetOptionQuery, BaseResult<OptionDto?>>
+ : RamshaQueryHandler<GetOptionQuery>
 {
-    public async Task<BaseResult<OptionDto?>> Handle(GetOptionQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetOptionQuery request, CancellationToken cancellationToken)
     {
-        var option = await optionRepository.GetAsync(
+        var option = await optionRepository.FindAsync(
             x => x.Id.Value == request.Id,
-            x => x.OptionValues);
+           [x => x.OptionValues]);
 
-        return option?.AsDto();
+        return Success(option?.AsDto());
     }
 }

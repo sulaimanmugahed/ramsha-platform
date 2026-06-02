@@ -1,4 +1,5 @@
-﻿using Ramsha.Domain.Customers.Entities;
+﻿using Ramsha.Common.Domain;
+using Ramsha.Domain.Customers.Entities;
 using Ramsha.Domain.Suppliers;
 using Ramsha.Domain.Suppliers.Entities;
 using System;
@@ -8,7 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Ramsha.Application.Contracts.Persistence;
-public interface ISupplierRepository:IGenericRepository<Supplier,SupplierId>
+
+public interface ISupplierRepository : IRepository<Supplier, SupplierId>
 {
 	Task<Supplier?> FindByUsername(string username);
 }

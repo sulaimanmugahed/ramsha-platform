@@ -21,8 +21,8 @@ public class DeliveryAgentsController : BaseApiController
     /// Returns the ID of the newly created delivery agent.
     /// </remarks>
     [HttpPost]
-    public async Task<BaseResult<string>> Create(CreateDeliveryAgentCommand command)
-        => await Mediator.Send(command);
+    public async Task<ActionResult<string>> Create(CreateDeliveryAgentCommand command)
+        => await Command(command);
 
     /// <summary>
     /// Retrieves all delivery agents.
@@ -31,6 +31,6 @@ public class DeliveryAgentsController : BaseApiController
     /// This endpoint returns a list of all available delivery agents .
     /// </remarks>
     [HttpGet]
-    public async Task<BaseResult<List<DeliveryAgentDto>>> GetAll()
-        => await Mediator.Send(new GetAllDeliveryAgentsQuery());
+    public async Task<ActionResult<List<DeliveryAgentDto>>> GetAll()
+        => await Query(new GetAllDeliveryAgentsQuery());
 }

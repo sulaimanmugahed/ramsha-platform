@@ -5,25 +5,25 @@ using Ramsha.Application.Dtos.Baskets;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Customers.Entities;
-using MediatR;
-using System.Security.Cryptography.X509Certificates;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Baskets.Commands.AddItem;
+
 internal class AddItemToBasketCommandHandler(
 	IInventoryItemRepository inventoryItemRepository,
 	IBasketRepository basketRepository,
-	IUnitOfWork unitOfWork,
 	IAuthenticatedUserService authenticatedUser,
 	ICookieService cookieService)
-	: IRequestHandler<AddItemToBasketCommand, BaseResult<BasketItemDto>>
+	: RamshaCommandHandler<AddItemToBasketCommand>
 {
-	public async Task<BaseResult<BasketItemDto>> Handle(AddItemToBasketCommand request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(AddItemToBasketCommand request, CancellationToken cancellationToken)
 	{
 		var inventoryItem = await inventoryItemRepository
-		.GetAsync(x => x.Id == new Domain.Inventory.InventoryItemId(request.InventoryItemId));
+		.FindAsync(x => x.Id == new Domain.Inventory.InventoryItemId(request.InventoryItemId));
 
 		if (inventoryItem is null)
-			return new Error(ErrorCode.NotFound);
+			return NotFound();
 
 		var buyer = authenticatedUser.UserName ?? cookieService.GetCookieValue(ApplicationCookies.Buyer);
 
@@ -45,14 +45,12 @@ internal class AddItemToBasketCommandHandler(
 					});
 			}
 			var newBasket = Basket.Create(buyer);
-			await basketRepository.AddAsync(newBasket);
-			await unitOfWork.SaveChangesAsync();
+			await basketRepository.AddAsync(newBasket, true);
 			basket = newBasket;
 		}
 
 		var basketItem = basket.AddItem(inventoryItem, request.Quantity);
-		await unitOfWork.SaveChangesAsync();
 
-		return basketItem.AsItemDto();
+		return Success(basketItem.AsItemDto());
 	}
 }

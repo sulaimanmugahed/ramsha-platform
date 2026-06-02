@@ -1,9 +1,8 @@
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Suppliers;
-using Ramsha.Application.Wrappers;
-using MediatR;
-using Ramsha.Application.Dtos.Supplies;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetSupplyRequestsBySupplier;
 
@@ -11,12 +10,12 @@ public class GetCurrentSupplierSuppliesQueryHandler(
     ISupplyRepository supplyRepository,
     IAuthenticatedUserService authenticatedUser,
     IHttpService httpService
-) : IRequestHandler<GetCurrentSupplierSuppliesQuery, BaseResult<List<SupplyDto>>>
+) : RamshaQueryHandler<GetCurrentSupplierSuppliesQuery>
 {
-    public async Task<BaseResult<List<SupplyDto>>> Handle(GetCurrentSupplierSuppliesQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCurrentSupplierSuppliesQuery request, CancellationToken cancellationToken)
     {
         if (authenticatedUser.UserName is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var responseDto = await supplyRepository
         .GetSuppliesPaged(
@@ -31,6 +30,6 @@ public class GetCurrentSupplierSuppliesQueryHandler(
         responseDto.AddSortingMetaData(request.SortingParams);
         httpService.AddPagedHeader(responseDto.MetaData);
 
-        return responseDto.Data;
+        return Success(responseDto.Data);
     }
 }

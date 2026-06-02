@@ -9,15 +9,16 @@ using Ramsha.Domain.Suppliers.Entities;
 using Ramsha.Domain.Inventory.Entities;
 using Ramsha.Domain.Suppliers;
 using Ramsha.Domain.Orders.Entities;
-using MediatR;
 using Ramsha.Domain.Inventory;
 using Ramsha.Domain.Orders;
 using Ramsha.Domain.DeliveryAgents;
+using Ramsha.EntityFrameworkCore;
 
 
 namespace Ramsha.Persistence.Contexts;
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IAuthenticatedUserService authenticatedUserService, IPublisher publisher)
-    : DbContext(options)
+
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    : RamshaEFDbContext<ApplicationDbContext>(options)
 {
     public DbSet<Product> Products { get; set; }
     public DbSet<Customer> Customers { get; set; }
@@ -26,6 +27,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Supplier> Suppliers { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<SupplyRequest> SupplyRequests { get; set; }
+    public DbSet<FulfillmentRequest> FulfillmentRequests { get; set; }
+
     public DbSet<InventoryItem> InventoryItems { get; set; }
     public DbSet<Basket> Baskets { get; set; }
     public DbSet<Category> Categories { get; set; }
@@ -71,30 +74,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         var result = await base.SaveChangesAsync(cancellationToken);
 
-        await PublishDomainEventsAsync();
 
         return result;
-    }
-
-    private async Task PublishDomainEventsAsync()
-    {
-        // Get all domain events from all entities
-        var domainEntities = ChangeTracker
-            .Entries<BaseEntity>()
-            .Where(e => e.Entity.DomainEvents.Any())
-            .Select(e => e.Entity)
-            .ToList();
-
-        foreach (var entity in domainEntities)
-        {
-            var events = entity.DomainEvents.ToList();
-            entity.ClearDomainEvent();
-
-            foreach (var domainEvent in events)
-            {
-                await publisher.Publish(domainEvent);
-            }
-        }
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -110,7 +91,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.HasDefaultSchema("Core");
 
-        builder.Ignore<BaseEntity>();
 
         builder.Entity<Brand>(entity =>
      {

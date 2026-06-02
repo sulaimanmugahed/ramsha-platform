@@ -1,17 +1,17 @@
 
-using MediatR;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Queries.GetProductVariantSelection;
 
 public class GetProductVariantSelectionQueryHandler(
     IProductRepository productRepository
-) : IRequestHandler<GetProductVariantSelectionQuery, BaseResult<ProductVariantSelectionDto?>>
+) : RamshaQueryHandler<GetProductVariantSelectionQuery>
 {
-    public async Task<BaseResult<ProductVariantSelectionDto?>> Handle(GetProductVariantSelectionQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetProductVariantSelectionQuery request, CancellationToken cancellationToken)
     {
-        return await productRepository.GetProductVariantSelection(new Domain.Products.ProductId(request.ProductId), request.IsCatalog);
+        return Success(await productRepository.GetProductVariantSelection(new Domain.Products.ProductId(request.ProductId), request.IsCatalog));
     }
 }

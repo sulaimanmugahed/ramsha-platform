@@ -1,10 +1,8 @@
 
-using Ramsha.Application.Wrappers;
-using Ramsha.Domain.Products.Enums;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.CreateSupplyRequest;
 
-public class CreateSupplyRequestCommand : IRequest<BaseResult<string?>>
+public class CreateSupplyRequestCommand : IRamshaCommand
 {
 }

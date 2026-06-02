@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Brands.Commands.UpdateBrand;
 
-public class UpdateBrandCommand:IRequest<BaseResult>
+public class UpdateBrandCommand : IRamshaCommand
 {
     public Guid Id { get; set; }
     public string Name { get; set; }

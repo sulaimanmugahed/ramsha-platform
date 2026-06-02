@@ -6,20 +6,20 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Brands.Queries.GetBrand;
 
 public class GetBrandQueryHandler(
     IBrandRepository brandRepository
-) : IRequestHandler<GetBrandQuery, BaseResult<BrandDto>>
+) : RamshaQueryHandler<GetBrandQuery>
 {
-    public async Task<BaseResult<BrandDto>> Handle(GetBrandQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetBrandQuery request, CancellationToken cancellationToken)
     {
-        var existBrand = await brandRepository.GetByIdAsync(new Domain.Products.BrandId(request.Id));
+        var existBrand = await brandRepository.FindAsync(new Domain.Products.BrandId(request.Id));
 
         if (existBrand is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no brand with this id");
-        return existBrand.AsDto();
+            return NotFound(message: "no brand with this id");
+        return Success(existBrand.AsDto());
     }
 }

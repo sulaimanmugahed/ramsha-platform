@@ -1,33 +1,31 @@
 
 
-using MediatR;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Orders.Commands.ShipFulfillmentRequest;
 
 public class ShipFulfillmentRequestCommandHandler(
-    IOrderRepository orderRepository,
-    IUnitOfWork unitOfWork
-) : IRequestHandler<ShipFulfillmentRequestCommand, BaseResult>
+    IOrderRepository orderRepository
+) : RamshaCommandHandler<ShipFulfillmentRequestCommand>
 {
-    public async Task<BaseResult> Handle(ShipFulfillmentRequestCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(ShipFulfillmentRequestCommand request, CancellationToken cancellationToken)
     {
-        var order = await orderRepository.GetAsync(x => x.Id == new Domain.Orders.OrderId(request.OrderId)
-        , x => x.FulfillmentRequests);
+        var order = await orderRepository.FindAsync(x => x.Id == new Domain.Orders.OrderId(request.OrderId)
+        , [x => x.FulfillmentRequests]);
 
         if (order is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no order found");
+            return Invalid(message: "no order found");
 
         if (order is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no fulfillmentRequest found");
+            return Invalid(message: "no fulfillmentRequest found");
 
         order.ShipFulfillmentRequest(
             new Domain.Orders.FulfillmentRequestId(request.FulfillmentRequestId),
             new Domain.DeliveryAgents.DeliveryAgentId(request.DeliveryAgentId));
 
-        await unitOfWork.SaveChangesAsync();
-        return BaseResult.Ok();
+        return Success();
     }
 }

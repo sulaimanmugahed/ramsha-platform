@@ -1,10 +1,11 @@
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Products.Enums;
 
 namespace Ramsha.Domain.Products.Entities
 {
-    public class Coupon : BaseEntity
+    public class Coupon : Entity<CouponId>
     {
         public Coupon(CouponId id, string code, decimal discountValue, bool stackingAllowed, int usageLimit, DateTime startDate, DateTime endDate, DiscountType discountType)
         {
@@ -24,7 +25,6 @@ namespace Ramsha.Domain.Products.Entities
             return new Coupon(new CouponId(Guid.NewGuid()), code, discountValue, stackingAllowed, usageLimit, startDate, endDate, discountType);
         }
 
-        public CouponId Id { get; private set; }
         public string Code { get; private set; }
         public decimal DiscountValue { get; private set; }
         public DiscountType DiscountType { get; private set; }

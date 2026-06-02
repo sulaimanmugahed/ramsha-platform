@@ -21,8 +21,8 @@ public class OptionsController : BaseApiController
     /// This endpoint returns a list of all available options in the system.
     /// </remarks>
     [HttpGet]
-    public async Task<BaseResult<List<OptionDto?>>> GetOptions()
-        => await Mediator.Send(new GetOptionsQuery());
+    public async Task<ActionResult<List<OptionDto?>>> GetOptions()
+        => await Query(new GetOptionsQuery());
 
     /// <summary>
     /// Retrieves a specific option by its ID.
@@ -31,8 +31,8 @@ public class OptionsController : BaseApiController
     /// This endpoint returns the details of an option identified by its unique ID.
     /// </remarks>
     [HttpGet("{id}", Name = nameof(GetOption))]
-    public async Task<BaseResult<OptionDto?>> GetOption(Guid id)
-        => await Mediator.Send(new GetOptionQuery { Id = id });
+    public async Task<ActionResult<OptionDto?>> GetOption(Guid id)
+        => await Query(new GetOptionQuery { Id = id });
 
     /// <summary>
     /// Deletes an option by its ID.
@@ -41,8 +41,8 @@ public class OptionsController : BaseApiController
     /// This endpoint deletes an option identified by its unique ID.
     /// </remarks>
     [HttpDelete("{id}")]
-    public async Task<BaseResult> DeleteOption(Guid id)
-        => await Mediator.Send(new RemoveOptionCommand { OptionId = id });
+    public async Task<ActionResult> DeleteOption(Guid id)
+        => await Command(new RemoveOptionCommand { OptionId = id });
 
     /// <summary>
     /// Adds a new option.
@@ -52,12 +52,6 @@ public class OptionsController : BaseApiController
     /// Returns the ID of the newly created option and a link to retrieve it.
     /// </remarks>
     [HttpPost]
-    public async Task<ActionResult<BaseResult<string>>> AddNewOption(AddNewOptionCommand command)
-    {
-        var result = await Mediator.Send(command);
-        if (!result.Success)
-            return result;
-
-        return CreatedAtRoute(nameof(GetOption), new { id = result.Data }, result.Data);
-    }
+    public async Task<ActionResult<ActionResult<string>>> AddNewOption(AddNewOptionCommand command)
+    => await Command(command);
 }

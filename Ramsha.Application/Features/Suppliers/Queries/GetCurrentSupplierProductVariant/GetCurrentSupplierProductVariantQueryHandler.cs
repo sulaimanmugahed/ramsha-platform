@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Dtos.Suppliers;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Queries.GetCurrentSupplierProductVariant;
 
@@ -16,13 +13,13 @@ public class GetCurrentSupplierProductVariantQueryHandler(
     ISupplierProductRepository supplierProductRepository,
     ISupplierRepository supplierRepository,
     IAuthenticatedUserService authenticatedUserService
-) : IRequestHandler<GetCurrentSupplierProductVariantQuery, BaseResult<SupplierVariantDto?>>
+) : RamshaQueryHandler<GetCurrentSupplierProductVariantQuery>
 {
-    public async Task<BaseResult<SupplierVariantDto?>> Handle(GetCurrentSupplierProductVariantQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCurrentSupplierProductVariantQuery request, CancellationToken cancellationToken)
     {
-        var supplier = await supplierRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var supplier = await supplierRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (supplier is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var variant = await supplierProductRepository.GetVariantDetail(
            supplier.Id,
@@ -30,6 +27,6 @@ public class GetCurrentSupplierProductVariantQueryHandler(
            new Domain.Products.ProductVariantId(request.VariantId)
         );
 
-        return variant?.AsSupplierVariantDto();
+        return Success(variant?.AsSupplierVariantDto());
     }
 }

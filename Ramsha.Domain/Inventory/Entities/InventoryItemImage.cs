@@ -1,8 +1,9 @@
+using Ramsha.Common.Domain;
+
 namespace Ramsha.Domain.Inventory.Entities;
 
-public class InventoryItemImage
+public class InventoryItemImage : Entity<int>
 {
-    public int Id { get; set; }
     public InventoryItemId InventoryItemId { get; set; }
     public InventoryItem InventoryItem { get; set; }
     public string Url { get; set; }

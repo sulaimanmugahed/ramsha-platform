@@ -1,17 +1,15 @@
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Domain.Orders.Events;
 using Ramsha.Domain.Suppliers.Entities;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Orders.EventsHandler;
 
-public class NewOrderCreatedEventHandler(
-    ISupplierRepository supplierRepository,
-    IUnitOfWork unitOfWork
-) : INotificationHandler<NewOrderCreatedEvent>
+public class NewOrderCreatedEventHandler : ILocalEventHandler<NewOrderCreatedEvent>
 {
-    public async Task Handle(NewOrderCreatedEvent notification, CancellationToken cancellationToken)
+    public async Task HandleAsync(NewOrderCreatedEvent message, CancellationToken cancellationToken)
     {
         // var orderItemsGroups = notification.OrderItems.GroupBy(x => x.ItemOrdered.SupplierId);
         // foreach (var itemsGroup in orderItemsGroups)

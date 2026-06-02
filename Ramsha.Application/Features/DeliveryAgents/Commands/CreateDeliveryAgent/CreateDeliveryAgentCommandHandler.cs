@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Identity.UserInterfaces;
 using Ramsha.Application.Contracts.Persistence;
@@ -10,16 +6,16 @@ using Ramsha.Application.Dtos.Account.Requests;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Constants;
 using Ramsha.Domain.DeliveryAgents;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.DeliveryAgents.Commands.CreateDeliveryAgent;
 
 public class CreateDeliveryAgentCommandHandler(
 IDeliveryAgentRepository deliveryAgentRepository,
-IUnitOfWork unitOfWork,
 IUserService userService
-) : IRequestHandler<CreateDeliveryAgentCommand, BaseResult<string>>
+) : RamshaCommandHandler<CreateDeliveryAgentCommand>
 {
-    public async Task<BaseResult<string>> Handle(CreateDeliveryAgentCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(CreateDeliveryAgentCommand request, CancellationToken cancellationToken)
     {
         var registerResult = await userService.CreateAccount(new RegisterRequest
         {
@@ -29,9 +25,9 @@ IUserService userService
 
         }, Roles.DeliveryAgent);
 
-        if (!registerResult.Success)
+        if (!registerResult.Succeeded)
         {
-            return new List<Error>(registerResult.Errors);
+            return registerResult.Error;
         }
 
         var customer = DeliveryAgent.Create(
@@ -41,8 +37,6 @@ IUserService userService
 
         await deliveryAgentRepository.AddAsync(customer);
 
-        await unitOfWork.SaveChangesAsync();
-
-        return customer.Id.Value.ToString();
+        return Success(customer.Id.Value.ToString());
     }
 }

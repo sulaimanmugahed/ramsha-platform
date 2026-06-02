@@ -1,12 +1,13 @@
 
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory.Services;
 using Ramsha.Domain.Products.Entities;
 
 namespace Ramsha.Domain.Inventory.Entities;
 
-public class Stock : BaseEntity
+public class Stock : Entity<StockId>
 {
 
     private Stock()

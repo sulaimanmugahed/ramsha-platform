@@ -3,11 +3,12 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
-using MediatR;
-using Ramsha.Application.Contracts.Caching;
+
 using Ramsha.Application.Contracts.BackgroundJobs;
 using Ramsha.Application.Helpers;
 using Ramsha.Application.Services;
+using Ramsha.Caching;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.CreateProduct;
 
@@ -18,27 +19,26 @@ public class CreateProductCommandHandler(
     IBrandRepository brandRepository,
     IVariantService variantService,
     IOptionRepository optionRepository,
-    IUnitOfWork unitOfWork,
     ICodeGenerator codeGenerator,
-    ICacheService cacheService,
-    ProductService productService,
+    IRamshaCache cacheService,
     IBackgroundJobService backgroundJobService
-) : IRequestHandler<CreateProductCommand, BaseResult<string?>>
+) : RamshaCommandHandler<CreateProductCommand>
 {
-    public async Task<BaseResult<string?>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(CreateProductCommand request, CancellationToken cancellationToken)
     {
         var product = Product.Create(request.Name, request.Description);
 
-        var category = await categoryRepository.GetByIdAsync(new Domain.Products.CategoryId(request.Category));
+        var category = await categoryRepository.FindAsync(new Domain.Products.CategoryId(request.Category));
         if (category is null)
-            return new Error(ErrorCode.EmptyData);
+            return Invalid(message: "no category was found");
 
         product.SetCategory(category.Id);
 
 
-        var brand = await brandRepository.GetByIdAsync(new Domain.Products.BrandId(request.Brand));
+        var brand = await brandRepository.FindAsync(new Domain.Products.BrandId(request.Brand));
         if (brand is null)
-            return new Error(ErrorCode.EmptyData);
+            return Invalid(message: "no brand was found");
+
 
         product.SetBrand(brand.Id);
 
@@ -52,12 +52,11 @@ public class CreateProductCommandHandler(
         {
             foreach (var tag in request.Tags)
             {
-                var existTag = await tagRepository.GetAsync(x => x.Name.ToLower() == tag.ToLower());
+                var existTag = await tagRepository.FindAsync(x => x.Name.ToLower() == tag.ToLower());
                 if (existTag is null)
                 {
                     existTag = Tag.Create(tag);
-                    await tagRepository.AddAsync(existTag);
-                    await unitOfWork.SaveChangesAsync();
+                    await tagRepository.AddAsync(existTag, true);
                 }
                 product.AddTag(existTag);
             }
@@ -72,16 +71,16 @@ public class CreateProductCommandHandler(
         {
             foreach (var option in request.Options)
             {
-                var optionToAdd = await optionRepository.GetAsync(o => o.Id == new Domain.Products.OptionId(option.Id));
+                var optionToAdd = await optionRepository.FindAsync(o => o.Id == new Domain.Products.OptionId(option.Id));
                 if (optionToAdd is null)
-                    return new Error(ErrorCode.RequestedDataNotExist, "invalid option", nameof(request.Options));
+                    return Invalid(message: "invalid option");
                 product.AddOption(optionToAdd, option.Priority);
             }
 
             var variant = request.DefaultVariant;
 
             if (variantService.IsVariantExists(product.Variants, variant.VariantValues))
-                return new Error(ErrorCode.ThisDataAlreadyExist, "this variant is already exist");
+                return Invalid(message: "this variant is already exist");
 
             var productVariant = ProductVariant.Create(product.Id,
                     new DimensionalWeight(variant.Length, variant.Width, variant.Height),
@@ -99,12 +98,12 @@ public class CreateProductCommandHandler(
                 if (option is null)
                 {
                     if (option is null)
-                        return new Error(ErrorCode.RequestedDataNotExist, "invalid option", nameof(variant.VariantValues));
+                        return Invalid(message: "invalid option");
                 }
 
                 var value = await optionRepository.GetValue(new Domain.Products.OptionValueId(variantValue.Value));
                 if (value is null)
-                    return new Error(ErrorCode.EmptyData, "invalid option value", nameof(variant.VariantValues));
+                    return Invalid(message: "invalid option value");
 
                 optionValuesNames.Add(value.Name);
                 productVariant.AddValue(option.Id, value.Id);
@@ -120,12 +119,10 @@ public class CreateProductCommandHandler(
 
         await productRepository.AddAsync(product);
 
-        await unitOfWork.SaveChangesAsync();
 
-        backgroundJobService.Enqueue(() => productService.InvalidateRelatedCachedData(cacheService));
+        backgroundJobService.Enqueue(() => cacheService.RemoveByTagAsync(CacheKeysHelper.ProductCacheKeys.Tag));
 
-        return product.Id.Value.ToString();
+        return Success(product.Id.Value.ToString());
     }
-
 
 }

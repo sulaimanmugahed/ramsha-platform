@@ -9,7 +9,7 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Queries.GetProductsList;
 
@@ -17,17 +17,17 @@ public class GetProductsListQueryHandler(
     IProductRepository productRepository
 
 
-) : IRequestHandler<GetProductsListQuery, BaseResult<List<ProductDto>>>
+) : RamshaQueryHandler<GetProductsListQuery>
 {
-    public async Task<BaseResult<List<ProductDto?>>> Handle(GetProductsListQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetProductsListQuery request, CancellationToken cancellationToken)
     {
-        var products = await productRepository.GetAllWithIncludeAsync(
-         x => x.Options,
+        var products = await productRepository.GetListAsync(
+         [x => x.Options,
          x => x.Category,
-         X => X.Inventories
+         X => X.Inventories]
         );
 
 
-        return products.Select(p => p?.AsDto()).ToList();
+        return Success(products.Select(p => p?.AsDto()).ToList());
     }
 }

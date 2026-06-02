@@ -7,7 +7,6 @@ using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.BackgroundJobs;
-using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Helpers;
 
 namespace Ramsha.Api.Controllers.v1;

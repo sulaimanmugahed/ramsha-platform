@@ -3,31 +3,33 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Customers;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Customers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 
 namespace Ramsha.Application.Features.Customers.Queries.Get;
-public class GetCustomerQueryHandler(IUserService userService, ICustomerRepository customerRepository) : IRequestHandler<GetCustomerQuery, BaseResult<CustomerDto>>
+
+public class GetCustomerQueryHandler(IUserService userService, ICustomerRepository customerRepository)
+: RamshaQueryHandler<GetCustomerQuery>
 {
-	public async Task<BaseResult<CustomerDto>> Handle(GetCustomerQuery request, CancellationToken cancellationToken)
+	public override async Task<IRamshaResult> HandleAsync(GetCustomerQuery request, CancellationToken cancellationToken)
 	{
 		var customer = await customerRepository
-			.GetByIdAsync(new CustomerId(request.Id));
+			.FindAsync(new CustomerId(request.Id));
 
 		if (customer is null)
-			return new Error(ErrorCode.RequestedDataNotExist);
+			return NotFound();
 
 
 		var customerAccount = await userService.GetAccount(customer.Username);
-		if (!customerAccount.Success)
-			return new Error(ErrorCode.RequestedDataNotExist);
+		if (!customerAccount.Succeeded)
+			return NotFound();
 
-		return new CustomerDto(
+		return Success(new CustomerDto(
 			customer.Id.Value,
 			 customer.FirstName,
 		 customer.LastName,
-			 customerAccount.Data.Username
-		);
+			 customerAccount.Value.Username
+		));
 
 	}
 

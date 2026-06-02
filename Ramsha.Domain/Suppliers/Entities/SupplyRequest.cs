@@ -1,9 +1,10 @@
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Products.Enums;
 
 namespace Ramsha.Domain.Suppliers.Entities;
 
-public class SupplyRequest : BaseEntity
+public class SupplyRequest : Entity<SupplyRequestId>
 {
 
     private SupplyRequest(SupplyRequestId id, string supplier)
@@ -11,7 +12,6 @@ public class SupplyRequest : BaseEntity
         Id = id;
         Supplier = supplier;
     }
-    public SupplyRequestId Id { get; set; }
 
     public CurrencyCode Currency { get; set; }
 

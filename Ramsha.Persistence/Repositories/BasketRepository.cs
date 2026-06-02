@@ -2,25 +2,22 @@
 using Ramsha.Domain.Baskets;
 using Ramsha.Domain.Customers.Entities;
 using Ramsha.Persistence.Contexts;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Ramsha.EntityFrameworkCore;
 
 namespace Ramsha.Persistence.Repositories;
-public class BasketRepository(ApplicationDbContext context)
-	: GenericRepository<Basket, BasketId>(context)
+
+public class BasketRepository
+	: EFCoreRepository<ApplicationDbContext, Basket, BasketId>
 	, IBasketRepository
 {
-	private DbSet<Basket> _baskets = context.Set<Basket>();
 
 
 	public async Task<Basket?> FindByBuyer(string buyer)
 	{
-		return await _baskets.AsSplitQuery()
+		var dbContext = await GetDbContextAsync();
+		return await dbContext.Baskets.AsSplitQuery()
 		.Include(b => b.Items)
 		.ThenInclude(x => x.InventoryItem)
 		.FirstOrDefaultAsync(b => b.Buyer == buyer);
@@ -28,7 +25,8 @@ public class BasketRepository(ApplicationDbContext context)
 
 	public async Task<Basket?> GetDetail(string buyer)
 	{
-		return await _baskets.AsSplitQuery()
+		var dbContext = await GetDbContextAsync();
+		return await dbContext.Baskets.AsSplitQuery()
 		.Include(b => b.Items)
 
 			.ThenInclude(i => i.InventoryItem)

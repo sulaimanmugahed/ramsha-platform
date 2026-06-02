@@ -10,12 +10,12 @@ namespace Ramsha.Application.Contracts.Identity
     public interface IAccountServices
     {
         Task<bool> ChangePassword(string username, ChangePasswordRequest request);
-        Task<BaseResult> ChangeUserName(ChangeUserNameRequest model);
-        Task<BaseResult<AuthenticationResult>> Authenticate(AuthenticationRequest request);
-        Task<BaseResult<AuthenticationResult>> AuthenticateByUserName(string username);
-        Task<BaseResult<AuthenticationResult>> GetCurrentAccount();
-        Task<BaseResult<AuthenticationResult>> Refresh(string token, string? accessToken = null);
-        Task<BaseResult> Revoke(string token);
+        Task<IRamshaResult> ChangeUserName(ChangeUserNameRequest model);
+        Task<RamshaResult<AuthenticationResult>> Authenticate(AuthenticationRequest request);
+        Task<RamshaResult<AuthenticationResult>> AuthenticateByUserName(string username);
+        Task<RamshaResult<AuthenticationResult>> GetCurrentAccount();
+        Task<RamshaResult<AuthenticationResult>> Refresh(string token, string? accessToken = null);
+        Task<IRamshaResult> Revoke(string token);
         Task LogoutCurrentUser();
         Task UpdateAddress(string userName, Address address);
         Task<bool> SendConfirmEmail(string userEmail);

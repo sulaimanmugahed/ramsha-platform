@@ -1,12 +1,13 @@
 
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class Brand : BaseEntity
+public class Brand : Entity<BrandId>
 {
-    public BrandId Id { get; set; }
+
     public string Name { get; set; }
 
 

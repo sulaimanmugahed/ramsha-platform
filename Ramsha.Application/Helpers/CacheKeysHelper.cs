@@ -15,7 +15,9 @@ public static class CacheKeysHelper
 {
     public static class CatalogCacheKeys
     {
-        public const string Prefix = "Catalog";
+        public const string Prefix = "catalog";
+        public const string Tag = "catalog";
+
 
         public static string GetProductPagedKey(PagedParams? pagedParams = null)
         {
@@ -44,6 +46,8 @@ public static class CacheKeysHelper
     public static class StatisticsCacheKeys
     {
         public const string Prefix = "Statistics";
+        public const string Tag = "statistics";
+
         public static string GetSupplierStatisticsKey(string supplierId)
         {
             return $"{Prefix}:Supplier:{supplierId}";
@@ -59,6 +63,8 @@ public static class CacheKeysHelper
     public static class ProductCacheKeys
     {
         public const string Prefix = "Products";
+        public const string Tag = "products";
+
 
         public static string GetProductDetailKey(string productId)
         {
@@ -83,6 +89,8 @@ public static class CacheKeysHelper
     public static class InventoryCacheKeys
     {
         public const string Prefix = "Inventory";
+        public const string Tag = "inventory";
+
 
         public static string GetInventoryItemsPagedKey(string productId, string variantId, PagedParams? pagedParams = null)
         {
@@ -94,6 +102,8 @@ public static class CacheKeysHelper
     public static class PermissionsCacheKeys
     {
         public const string Prefix = "Permissions";
+        public const string Tag = "permissions";
+
 
         public static string GetUserPermissionsKey(string username)
         {

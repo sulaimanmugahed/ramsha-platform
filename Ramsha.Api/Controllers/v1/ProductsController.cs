@@ -37,8 +37,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns a paginated list of products based on the provided query parameters.
     /// </remarks>
     [HttpPost("paged")]
-    public async Task<BaseResult<List<ProductDto>>> GetProductsPaged([FromBody] GetProductsPagedQuery query)
-        => await Mediator.Send(query);
+    public async Task<ActionResult<List<ProductDto>>> GetProductsPaged([FromBody] GetProductsPagedQuery query)
+        => await Query(query);
 
     /// <summary>
     /// Retrieves variant selection details for a product.
@@ -47,8 +47,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns variant selection details for a product such as available options, and variants data, useful for some pages.
     /// </remarks>
     [HttpGet("{productId}/selection")]
-    public async Task<BaseResult<ProductVariantSelectionDto?>> GetProductVariantSelection(Guid productId, bool isCatalog)
-        => await Mediator.Send(new GetProductVariantSelectionQuery { ProductId = productId, IsCatalog = isCatalog });
+    public async Task<ActionResult<ProductVariantSelectionDto?>> GetProductVariantSelection(Guid productId, bool isCatalog)
+        => await Query(new GetProductVariantSelectionQuery { ProductId = productId, IsCatalog = isCatalog });
 
     /// <summary>
     /// Retrieves options for a specific product.
@@ -57,8 +57,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns a list of options available for a product identified by its ID.
     /// </remarks>
     [HttpGet("{productId}/options")]
-    public async Task<BaseResult<List<ProductOptionDto>?>> GetProductOption(Guid productId)
-        => await Mediator.Send(new GetProductOptionsQuery { ProductId = productId });
+    public async Task<ActionResult<List<ProductOptionDto>?>> GetProductOption(Guid productId)
+        => await Query(new GetProductOptionsQuery { ProductId = productId });
 
     /// <summary>
     /// Retrieves a specific product by its ID.
@@ -67,8 +67,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns a product identified by its unique ID.
     /// </remarks>
     [HttpGet("{productId}", Name = nameof(GetProduct))]
-    public async Task<BaseResult<ProductDto?>> GetProduct(Guid productId)
-        => await Mediator.Send(new GetProductByIdQuery { Id = productId });
+    public async Task<ActionResult<ProductDto?>> GetProduct(Guid productId)
+        => await Query(new GetProductByIdQuery { Id = productId });
 
     /// <summary>
     /// Retrieves detailed information about a product.
@@ -77,8 +77,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns comprehensive details about a product, including variants and options.
     /// </remarks>
     [HttpGet("{productId}/detail", Name = nameof(GetProductDetail))]
-    public async Task<BaseResult<ProductDetailsDto?>> GetProductDetail(Guid productId)
-        => await Mediator.Send(new GetProductDetailsQuery { ProductId = productId });
+    public async Task<ActionResult<ProductDetailsDto?>> GetProductDetail(Guid productId)
+        => await Query(new GetProductDetailsQuery { ProductId = productId });
 
     /// <summary>
     /// Deletes a range of products.
@@ -87,8 +87,8 @@ public class ProductsController : BaseApiController
     /// This endpoint deletes multiple products based on the provided IDs.
     /// </remarks>
     [HttpDelete]
-    public async Task<BaseResult> RemoveRange(DeleteProductRangeCommand command)
-        => await Mediator.Send(command);
+    public async Task<ActionResult> RemoveRange(DeleteProductRangeCommand command)
+        => await Command(command);
 
     /// <summary>
     /// Delete a specific product by its ID.
@@ -97,8 +97,8 @@ public class ProductsController : BaseApiController
     /// This endpoint delete a product that match ID provided.
     /// </remarks>
     [HttpDelete("{id}")]
-    public async Task<BaseResult> Remove(Guid id)
-        => await Mediator.Send(new DeleteProductCommand { Id = id });
+    public async Task<ActionResult> Remove(Guid id)
+        => await Command(new DeleteProductCommand { Id = id });
 
     /// <summary>
     /// Creates a new product.
@@ -107,13 +107,9 @@ public class ProductsController : BaseApiController
     /// This endpoint creates a new product with the provided details and returns the ID of the created product.
     /// </remarks>
     [HttpPost]
-    public async Task<ActionResult<BaseResult<string?>>> CreateProducts(CreateProductCommand command)
+    public async Task<ActionResult<ActionResult<string?>>> CreateProducts(CreateProductCommand command)
     {
-        var result = await Mediator.Send(command);
-        if (!result.Success)
-            return result;
-
-        return CreatedAtRoute(nameof(GetProduct), new { productId = result.Data }, result);
+        return await Command(command);
     }
 
     /// <summary>
@@ -123,8 +119,8 @@ public class ProductsController : BaseApiController
     /// This endpoint adds an option to a product identified by its ID.
     /// </remarks>
     [HttpPost("{productId}/options/{optionId}")]
-    public async Task<BaseResult> AddOption(Guid productId, Guid optionId)
-        => await Mediator.Send(new AddProductOptionCommand { ProductId = productId, OptionId = optionId });
+    public async Task<ActionResult> AddOption(Guid productId, Guid optionId)
+        => await Command(new AddProductOptionCommand { ProductId = productId, OptionId = optionId });
 
     /// <summary>
     /// Removes an option from a product.
@@ -133,8 +129,8 @@ public class ProductsController : BaseApiController
     /// This endpoint removes an option from a product identified by its ID.
     /// </remarks>
     [HttpDelete("{productId}/options/{optionId}")]
-    public async Task<BaseResult> RemoveOption(Guid productId, Guid optionId)
-        => await Mediator.Send(new DeleteProductOptionCommand { ProductId = productId, OptionId = optionId });
+    public async Task<ActionResult> RemoveOption(Guid productId, Guid optionId)
+        => await Command(new DeleteProductOptionCommand { ProductId = productId, OptionId = optionId });
 
     /// <summary>
     /// Adds a variant to a product.
@@ -143,10 +139,10 @@ public class ProductsController : BaseApiController
     /// This endpoint adds a new variant to a product identified by its ID.
     /// </remarks>
     [HttpPost("{productId}/variants")]
-    public async Task<BaseResult> AddProductVariant(Guid productId, AddProductVariantCommand command)
+    public async Task<ActionResult> AddProductVariant(Guid productId, AddProductVariantCommand command)
     {
         command.ProductId = productId;
-        return await Mediator.Send(command);
+        return await Command(command);
     }
 
     /// <summary>
@@ -156,8 +152,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns the default variant for a product identified by its ID.
     /// </remarks>
     [HttpGet("{productId}/variants/default")]
-    public async Task<BaseResult<ProductVariantDto?>> GetDefaultVariant(Guid productId)
-        => await Mediator.Send(new GetDefaultVariantQuery { ProductId = productId });
+    public async Task<ActionResult<ProductVariantDto?>> GetDefaultVariant(Guid productId)
+        => await Query(new GetDefaultVariantQuery { ProductId = productId });
 
     /// <summary>
     /// Retrieves all variants for a product.
@@ -166,8 +162,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns a list of all variants for a product identified by its ID.
     /// </remarks>
     [HttpGet("{productId}/variants")]
-    public async Task<BaseResult<List<ProductVariantDto?>>> GetVariantsForProduct(Guid productId)
-        => await Mediator.Send(new GetProductVariantsQuery { ProductId = productId });
+    public async Task<ActionResult<List<ProductVariantDto?>>> GetVariantsForProduct(Guid productId)
+        => await Query(new GetProductVariantsQuery { ProductId = productId });
 
     /// <summary>
     /// Retrieves details of a specific variant.
@@ -176,8 +172,8 @@ public class ProductsController : BaseApiController
     /// This endpoint returns the details of a variant identified by its ID and product ID.
     /// </remarks>
     [HttpGet("{productId}/variants/{variantId}")]
-    public async Task<BaseResult<ProductVariantDto>> GetVariant(Guid productId, Guid variantId)
-        => await Mediator.Send(new GetProductVariantQuery { ProductId = productId, VariantId = variantId });
+    public async Task<ActionResult<ProductVariantDto>> GetVariant(Guid productId, Guid variantId)
+        => await Query(new GetProductVariantQuery { ProductId = productId, VariantId = variantId });
 
     /// <summary>
     /// Deletes a variant from a product.
@@ -186,8 +182,8 @@ public class ProductsController : BaseApiController
     /// This endpoint deletes a variant identified by its ID and product ID.
     /// </remarks>
     [HttpDelete("{productId}/variants/{variantId}")]
-    public async Task<BaseResult> DeleteVariant(Guid productId, Guid variantId)
-        => await Mediator.Send(new DeleteProductVariantCommand { ProductId = productId, VariantId = variantId });
+    public async Task<ActionResult> DeleteVariant(Guid productId, Guid variantId)
+        => await Command(new DeleteProductVariantCommand { ProductId = productId, VariantId = variantId });
 
     /// <summary>
     /// Updates a product.
@@ -196,10 +192,10 @@ public class ProductsController : BaseApiController
     /// This endpoint updates the details of a product identified by its ID.
     /// </remarks>
     [HttpPut("{productId}")]
-    public async Task<BaseResult> UpdateProduct(Guid productId, UpdateProductCommand command)
+    public async Task<ActionResult> UpdateProduct(Guid productId, UpdateProductCommand command)
     {
         command.ProductId = productId;
-        return await Mediator.Send(command);
+        return await Command(command);
     }
 
     /// <summary>
@@ -209,11 +205,11 @@ public class ProductsController : BaseApiController
     /// This endpoint updates the details of a variant identified by its ID and product ID.
     /// </remarks>
     [HttpPut("{productId}/variants/{variantId}")]
-    public async Task<BaseResult> UpdateVariant(Guid productId, Guid variantId, UpdateProductVariantCommand command)
+    public async Task<ActionResult> UpdateVariant(Guid productId, Guid variantId, UpdateProductVariantCommand command)
     {
         command.VariantId = variantId;
         command.ProductId = productId;
-        return await Mediator.Send(command);
+        return await Command(command);
     }
 
     /// <summary>
@@ -223,6 +219,6 @@ public class ProductsController : BaseApiController
     /// This endpoint updates the status of a product identified by its ID.
     /// </remarks>
     [HttpPut("{productId}/status")]
-    public async Task<BaseResult> ChangeProductStatus([FromRoute] Guid productId, [FromQuery] ProductStatus statusValue)
-        => await Mediator.Send(new ChangeProductStatusCommand { ProductId = productId, Status = statusValue });
+    public async Task<ActionResult> ChangeProductStatus([FromRoute] Guid productId, [FromQuery] ProductStatus statusValue)
+        => await Command(new ChangeProductStatusCommand { ProductId = productId, Status = statusValue });
 }

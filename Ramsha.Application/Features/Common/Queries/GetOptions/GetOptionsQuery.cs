@@ -1,10 +1,8 @@
 
-using Ramsha.Application.Dtos.Common;
-using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Common.Queries.GetOption;
 
-public class GetOptionsQuery : IRequest<BaseResult<List<OptionDto?>>>
+public class GetOptionsQuery : IRamshaQuery
 {
 }

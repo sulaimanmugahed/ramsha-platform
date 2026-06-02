@@ -1,4 +1,5 @@
-﻿using Ramsha.Domain.Baskets;
+﻿using Ramsha.Common.Domain;
+using Ramsha.Domain.Baskets;
 using Ramsha.Domain.Baskets.Entities;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Inventory;
@@ -8,9 +9,9 @@ using Ramsha.Domain.Products.Entities;
 
 
 namespace Ramsha.Domain.Customers.Entities;
-public class Basket : BaseEntity
+
+public class Basket : Entity<BasketId>
 {
-    public BasketId Id { get; set; }
     public string Buyer { get; set; }
     public List<BasketItem> Items { get; set; } = [];
     public string? PaymentIntentId { get; set; }

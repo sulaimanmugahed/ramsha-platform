@@ -1,9 +1,9 @@
 
-using MediatR;
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Orders;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Orders.Queries.GetCurrentDeliveryAgentFulfillments;
 
@@ -12,13 +12,13 @@ public class GetCurrentDeliveryAgentFulfillmentsQueryHandler(
     IAuthenticatedUserService authenticatedUserService,
     IFulfillmentRequestRepository fulfillmentRequestRepository,
     IHttpService httpService
-) : IRequestHandler<GetCurrentDeliveryAgentFulfillmentsQuery, BaseResult<List<FulfillmentRequestDto>>>
+) : RamshaQueryHandler<GetCurrentDeliveryAgentFulfillmentsQuery>
 {
-    public async Task<BaseResult<List<FulfillmentRequestDto>>> Handle(GetCurrentDeliveryAgentFulfillmentsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCurrentDeliveryAgentFulfillmentsQuery request, CancellationToken cancellationToken)
     {
-        var agent = await deliveryAgentRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var agent = await deliveryAgentRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (agent is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var responseDto = await fulfillmentRequestRepository.GetPaged(request.PaginationParams, request.FilterParams, request.SortingParams, x => x.DeliveryAgentId == agent.Id);
 
@@ -27,6 +27,6 @@ public class GetCurrentDeliveryAgentFulfillmentsQueryHandler(
 
         httpService.AddPagedHeader(responseDto.MetaData);
 
-        return responseDto.Data;
+        return Success(responseDto.Data);
     }
 }

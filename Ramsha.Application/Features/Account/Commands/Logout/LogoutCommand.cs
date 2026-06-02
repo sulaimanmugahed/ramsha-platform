@@ -1,10 +1,9 @@
 
-using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Account.Commands.Logout;
 
-public class LogoutCommand:IRequest<BaseResult>
+public class LogoutCommand : IRamshaCommand
 {
-    
+
 }

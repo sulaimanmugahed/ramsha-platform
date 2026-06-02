@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Orders;
 using Ramsha.Application.Dtos.Suppliers;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Orders.Queries.GetCurrentSupplierFulfillmentRequests;
 
@@ -17,22 +14,22 @@ public class GetCurrentSupplierFulfillmentRequestsQueryHandler(
     ISupplierRepository supplierRepository,
     IAuthenticatedUserService authenticatedUserService,
     IHttpService httpService
-) : IRequestHandler<GetCurrentSupplierFulfillmentRequestsQuery, BaseResult<List<FulfillmentRequestDto>>>
+) : RamshaQueryHandler<GetCurrentSupplierFulfillmentRequestsQuery>
 {
-    public async Task<BaseResult<List<FulfillmentRequestDto>>> Handle(GetCurrentSupplierFulfillmentRequestsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCurrentSupplierFulfillmentRequestsQuery request, CancellationToken cancellationToken)
     {
-        var supplier = await supplierRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var supplier = await supplierRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (supplier is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
-        var responseDto = await fulfillmentRequestRepository.GetPaged(request.PaginationParams, request.FilterParams, request.SortingParams,x=> x.SupplierId == supplier.Id);
+        var responseDto = await fulfillmentRequestRepository.GetPaged(request.PaginationParams, request.FilterParams, request.SortingParams, x => x.SupplierId == supplier.Id);
 
         responseDto.AddFilterMetaData(request.FilterParams);
         responseDto.AddSortingMetaData(request.SortingParams);
 
         httpService.AddPagedHeader(responseDto.MetaData);
 
-        return responseDto.Data;
+        return Success(responseDto.Data);
 
     }
 }

@@ -4,23 +4,21 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
-using MediatR;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.AddProductVariant;
 
 public class AddProductVariantRangeCommandHandler(
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
-    IOptionRepository optionRepository,
-    ICodeGenerator codeGenerator
+    IProductRepository productRepository
 
-) : IRequestHandler<AddProductVariantRangeCommand, BaseResult>
+) : RamshaCommandHandler<AddProductVariantRangeCommand>
 {
-    public async Task<BaseResult> Handle(AddProductVariantRangeCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(AddProductVariantRangeCommand request, CancellationToken cancellationToken)
     {
         var product = await productRepository.GetProductWithVariantsAndOptions(new Domain.Products.ProductId(request.ProductId));
         if (product is null)
-            return new Error(ErrorCode.EmptyData, nameof(request.ProductId));
+            return Invalid(message: "no product was found");
 
         // foreach (var variant in request.Variants)
         // {
@@ -65,9 +63,8 @@ public class AddProductVariantRangeCommandHandler(
         // }
 
 
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 
     private string GenerateSKU(string productCode, List<string> optionValuesNames)

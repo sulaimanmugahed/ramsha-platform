@@ -2,20 +2,19 @@
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Common;
 using Ramsha.Application.Extensions;
-using Ramsha.Application.Wrappers;
-using MediatR;
-using Ramsha.Application.Dtos.Products;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Queries.GetProductOptions;
 
 public class GetProductOptionsQueryHandler(
     IProductRepository productRepository
-) : IRequestHandler<GetProductOptionsQuery, BaseResult<List<ProductOptionDto>?>>
+) : RamshaQueryHandler<GetProductOptionsQuery>
 {
-    public async Task<BaseResult<List<ProductOptionDto>?>> Handle(GetProductOptionsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetProductOptionsQuery request, CancellationToken cancellationToken)
     {
         var options = await productRepository.GetProductOptions(new Domain.Products.ProductId(request.ProductId));
 
-        return options.Select(x => x.AsProductOption()).ToList();
+        return Success(options.Select(x => x.AsProductOption()).ToList());
     }
 }

@@ -20,11 +20,11 @@ public class StorageController(IStorageService storageService) : BaseApiControll
     /// Returns the URL and full path of the uploaded file.
     /// </remarks>
     [HttpPost(nameof(Upload))]
-    public async Task<BaseResult<UploadFileResponse?>> Upload([FromForm] UploadFileRequest request)
+    public async Task<ActionResult<UploadFileResponse?>> Upload([FromForm] UploadFileRequest request)
     {
         var fullPath = await storageService.UploadFile(request.File, request.Path);
         if (fullPath is null)
-            return new Error(ErrorCode.Exception, "We couldn't upload the file");
+            return BadRequest("We couldn't upload the file");
 
         return new UploadFileResponse(storageService.GetImageUrl(fullPath), fullPath);
     }
@@ -37,7 +37,7 @@ public class StorageController(IStorageService storageService) : BaseApiControll
     /// Returns a list of URLs and full paths for the uploaded files.
     /// </remarks>
     [HttpPost(nameof(UploadRange))]
-    public async Task<BaseResult<List<UploadFileResponse>>> UploadRange([FromForm] UploadFileRangeRequest request)
+    public async Task<ActionResult<List<UploadFileResponse>>> UploadRange([FromForm] UploadFileRangeRequest request)
     {
         List<UploadFileResponse> responses = [];
 
@@ -45,7 +45,7 @@ public class StorageController(IStorageService storageService) : BaseApiControll
         {
             var fullPath = await storageService.UploadFile(file, request.Path);
             if (fullPath is null)
-                return new Error(ErrorCode.Exception, "We couldn't upload the file");
+                return BadRequest("We couldn't upload the file");
 
             responses.Add(new UploadFileResponse(storageService.GetImageUrl(fullPath), fullPath));
         }

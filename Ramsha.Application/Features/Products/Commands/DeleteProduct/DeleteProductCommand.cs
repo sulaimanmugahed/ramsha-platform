@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Commands.DeleteProduct;
 
-public class DeleteProductCommand : IRequest<BaseResult>
+public class DeleteProductCommand : IRamshaCommand
 {
     public Guid Id { get; set; }
 }

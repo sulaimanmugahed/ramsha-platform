@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MediatR;
 using Ramsha.Application.Dtos.Admins;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Admin.Queries.GetAdmins;
 
-public class GetAdminsQuery : IRequest<BaseResult<List<AdminDto>>>
+public class GetAdminsQuery : IRamshaQuery
 {
 
 }

@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
-using Ramsha.Application.Wrappers;
+
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Brands.Commands.CreateBrand;
 
-public class CreateBrandCommand : IRequest<BaseResult<string>>
+public class CreateBrandCommand : IRamshaCommand
 {
     public string Name { get; set; }
 }

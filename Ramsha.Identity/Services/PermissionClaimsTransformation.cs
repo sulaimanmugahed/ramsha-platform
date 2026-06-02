@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Ramsha.Application.Constants;
-using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Contracts.Identity;
 using Ramsha.Application.Dtos.Permissions;
 using Ramsha.Application.Helpers;
+using Ramsha.Caching;
 using Ramsha.Identity.Extensions;
 
 namespace Ramsha.Identity.Services;
 
-public class PermissionClaimsTransformation(IServiceScopeFactory serviceScopeFactory, ICacheService redisCacheService)
+public class PermissionClaimsTransformation(IServiceScopeFactory serviceScopeFactory, IRamshaCache redisCacheService)
     : IClaimsTransformation
 {
 
@@ -26,18 +26,20 @@ public class PermissionClaimsTransformation(IServiceScopeFactory serviceScopeFac
         {
             var username = principal.Identity.Name;
             var cacheKey = CacheKeysHelper.PermissionsCacheKeys.GetUserPermissionsKey(username);
-            var permissions = await redisCacheService.GetObject<IEnumerable<PermissionDto>>(cacheKey);
-            if (permissions is null)
-            {
-                using var scope = serviceScopeFactory.CreateScope();
-
-                var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
-                permissions = await permissionService.GetPermissionsForUserAsync(username);
-                if (permissions.Any())
+            var permissions = await redisCacheService.GetOrCreateAsync<IEnumerable<PermissionDto>>(
+                cacheKey,
+                async (ct) =>
                 {
-                    await redisCacheService.SetObject(cacheKey, permissions, TimeSpan.FromHours(6));
-                }
-            }
+                    using var scope = serviceScopeFactory.CreateScope();
+                    var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
+                    return await permissionService.GetPermissionsForUserAsync(username);
+                },
+                new RamshaCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromHours(6)
+                },
+                [CacheKeysHelper.PermissionsCacheKeys.Tag]);
+
 
             var claims = permissions.Select(permission => new Claim(ApplicationClaims.Permission, ((int)permission.PermissionType).ToString()));
             var claimsIdentity = new ClaimsIdentity();

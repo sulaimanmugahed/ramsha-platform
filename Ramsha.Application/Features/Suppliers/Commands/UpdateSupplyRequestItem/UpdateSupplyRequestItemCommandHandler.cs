@@ -1,33 +1,32 @@
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Wrappers;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.UpdateSupplyRequestItem;
 
 public class UpdateSupplyRequestItemCommandHandler(
 ISupplyRequestRepository supplyRequestRepository,
-IAuthenticatedUserService authenticatedUserService,
-IUnitOfWork unitOfWork
+IAuthenticatedUserService authenticatedUserService
 
-) : IRequestHandler<UpdateSupplyRequestItemCommand, BaseResult>
+) : RamshaCommandHandler<UpdateSupplyRequestItemCommand>
 {
-    public async Task<BaseResult> Handle(UpdateSupplyRequestItemCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(UpdateSupplyRequestItemCommand request, CancellationToken cancellationToken)
     {
         var supplyRequest = await supplyRequestRepository
         .GetWithDetails(x => x.Supplier == authenticatedUserService.UserName);
 
         if (supplyRequest is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no supplyRequest exist");
+            return Invalid(message: "no supplyRequest exist");
 
         var item = supplyRequest.Items.FirstOrDefault(x => x.Id.Value == request.SupplyRequestItemId);
         if (item is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no item exist", nameof(request.SupplyRequestItemId));
+            return Invalid(message: "no item exist");
 
         item.SetQuantity(request.Quantity);
 
-        await unitOfWork.SaveChangesAsync();
 
-        return BaseResult.Ok();
+        return Success();
     }
 }

@@ -5,55 +5,53 @@ using Ramsha.Application.Dtos.Suppliers;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Suppliers.Entities;
-using MediatR;
+
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Suppliers.Commands.AddSupplyRequestItem;
 
 public class AddSupplyRequestItemCommandHandler(
     ISupplyRequestRepository supplyRequestRepository,
-    IProductRepository productRepository,
     ISupplierRepository supplierRepository,
     IAuthenticatedUserService authenticatedUserService,
-    ISupplierProductRepository supplierProductRepository,
-    IUnitOfWork unitOfWork
-) : IRequestHandler<AddOrUpdateSupplyRequestItemCommand, BaseResult<SupplyRequestDto>>
+    ISupplierProductRepository supplierProductRepository
+) : RamshaCommandHandler<AddOrUpdateSupplyRequestItemCommand>
 {
-    public async Task<BaseResult<SupplyRequestDto>> Handle(AddOrUpdateSupplyRequestItemCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(AddOrUpdateSupplyRequestItemCommand request, CancellationToken cancellationToken)
     {
 
-        var supplier = await supplierRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var supplier = await supplierRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (supplier is null)
         {
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
         }
 
         var productId = new Domain.Products.ProductId(request.ProductId);
         var variantId = new Domain.Products.ProductVariantId(request.ProductVariantId);
 
-        var supplyRequest = await supplyRequestRepository.GetAsync(
+        var supplyRequest = await supplyRequestRepository.FindAsync(
             x => x.Supplier == supplier.Username,
-            x => x.Items);
+            [x => x.Items]);
 
         if (supplyRequest is null)
         {
             supplyRequest = SupplyRequest.Create(supplier.Username);
-            await supplyRequestRepository.AddAsync(supplyRequest);
-            await unitOfWork.SaveChangesAsync();
+            await supplyRequestRepository.AddAsync(supplyRequest, true);
         }
 
-        var supplierProduct = await supplierProductRepository.GetAsync(
+        var supplierProduct = await supplierProductRepository.FindAsync(
             x => x.ProductId == productId && x.SupplierId == supplier.Id,
-             p => p.SupplierVariants);
+             [p => p.SupplierVariants]);
 
         if (supplierProduct is null)
         {
-            return new Error(ErrorCode.RequestedDataNotExist, "no supplier product found");
+            return Invalid(message: "no supplier product found");
         }
 
 
         var variant = supplierProduct.SupplierVariants.First(x => x.ProductVariantId == variantId);
         if (variant is null)
-            return new Error(ErrorCode.RequestedDataNotExist, "no variant found");
+            return Invalid(message: "no variant found");
 
         var existItem = supplyRequest.Items
         .FirstOrDefault(x => x.ProductVariantId == variantId && x.ProductId.Value == request.ProductId);
@@ -72,8 +70,6 @@ public class AddSupplyRequestItemCommandHandler(
             supplyRequest.AddItem(supplyRequestItem);
         }
 
-        await unitOfWork.SaveChangesAsync();
-
-        return supplyRequest.AsSupplyRequestDto();
+        return Success(supplyRequest.AsSupplyRequestDto());
     }
 }

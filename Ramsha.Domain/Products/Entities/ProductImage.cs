@@ -1,13 +1,13 @@
 
 
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Suppliers;
 using Ramsha.Domain.Suppliers.Entities;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class ProductImage
+public class ProductImage : Entity<int>
 {
-    public int Id { get; set; }
     public ProductId ProductId { get; set; }
     public ProductVariantId? ProductVariantId { get; set; }
 

@@ -1,14 +1,14 @@
 
-using MediatR;
 
 using Ramsha.Domain.Inventory.Events;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Inventory.EventsHandlers;
 
 public class InventoryItemUpdatedEventHandler(
-) : INotificationHandler<InventoryItemUpdatedEvent>
+) : ILocalEventHandler<InventoryItemUpdatedEvent>
 {
-    public async Task Handle(InventoryItemUpdatedEvent notification, CancellationToken cancellationToken)
+    public async Task HandleAsync(InventoryItemUpdatedEvent message, CancellationToken cancellationToken)
     {
 
     }

@@ -1,4 +1,5 @@
-﻿using Ramsha.Domain.Common;
+﻿using Ramsha.Common.Domain;
+using Ramsha.Domain.Common;
 using Ramsha.Domain.Orders;
 using Ramsha.Domain.Orders.Entities;
 using Ramsha.Domain.Products;
@@ -6,7 +7,8 @@ using Ramsha.Domain.Products.Entities;
 
 
 namespace Ramsha.Domain.Suppliers.Entities;
-public class Supplier : BaseEntity, IAuditable, ISoftDeletable, IUser
+
+public class Supplier : Entity<SupplierId>, IEntityCreation, IEntityModification, IUser
 {
 	private Supplier(SupplierId id, string username, string firstName, string lastName)
 	{
@@ -26,10 +28,10 @@ public class Supplier : BaseEntity, IAuditable, ISoftDeletable, IUser
 	public SupplierId Id { get; set; }
 	public string FirstName { get; set; }
 	public string LastName { get; set; }
-	public Guid CreatedBy { get; set; }
-	public DateTime Created { get; set; }
-	public Guid? LastModifiedBy { get; set; }
-	public DateTime? LastModified { get; set; }
+	public string? CreatedBy { get; set; }
+	public DateTime CreationDate { get; set; }
+	public string? UpdatedBy { get; set; }
+	public DateTime? LastUpdateDate { get; set; }
 	public bool IsDeleted { get; set; }
 	public DateTime? Deleted { get; set; }
 	public Guid? DeletedBy { get; set; }
@@ -55,7 +57,7 @@ public class Supplier : BaseEntity, IAuditable, ISoftDeletable, IUser
 		_supplierProducts.Add(newProduct);
 	}
 
-	
+
 
 
 

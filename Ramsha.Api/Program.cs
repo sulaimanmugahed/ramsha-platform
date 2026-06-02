@@ -1,5 +1,4 @@
 using Ramsha.Api.Infrastructure.Extensions;
-using Ramsha.Api.Infrastructure.Middlewares;
 using Ramsha.Api.Infrastructure.Services;
 using Ramsha.Application.Contracts;
 using Ramsha.Application;
@@ -22,6 +21,10 @@ using Ramsha.Identity.Contexts;
 using Ramsha.CacheService;
 using Ramsha.BackgroundJobs;
 using Hangfire;
+using Ramsha.AspNetCore.Mvc;
+using Ramsha;
+using Asp.Versioning;
+using Ramsha.Common.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.firebase.json", false, reloadOnChange: true);
@@ -39,6 +42,15 @@ builder.Services.AddControllers().AddJsonOptions(o =>
     options.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 });
 
+builder.Services.AddRamsha(ramsha =>
+{
+    ramsha
+    .AddModule<CommonApplicationModule>()
+    .AddEFPostgreSql()
+    .AddModule<AspNetCoreMvcModule>()
+    .AddCaching();
+});
+
 
 builder.Services.AddAuthorization();
 
@@ -49,7 +61,6 @@ builder.Services
 .AddIdentityInfrastructure(appConfiguration)
 .AddFileStorage(appConfiguration)
 .AddEmailServices(appConfiguration)
-.AddRedisCache(appConfiguration)
 .AddBackgroundJobsServices(appConfiguration)
 .AddAppPaymentServices(appConfiguration);
 
@@ -66,7 +77,20 @@ builder.Services.AddScoped<IGeocodingService, GeocodingService>();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddJwt(appConfiguration);
-builder.Services.AddSwaggerWithVersioning();
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddApiVersioning(setup =>
+{
+    setup.DefaultApiVersion = new ApiVersion(1.0);
+    setup.AssumeDefaultVersionWhenUnspecified = true;
+    setup.ReportApiVersions = true;
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'V";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<IHttpService, HttpService>();
@@ -99,6 +123,7 @@ builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Confi
 
 var app = builder.Build();
 
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -118,29 +143,27 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("WebClient");
 
 
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseErrorHandlerMiddleware();
-
-app.MapControllers();
 
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(option =>
-    {
-        var descriptions = app.DescribeApiVersions();
-        foreach (var desc in descriptions)
-        {
-            string url = $"/swagger/{desc.GroupName}/swagger.json";
-            string name = desc.GroupName.ToUpperInvariant();
-            option.SwaggerEndpoint(url, name);
-        }
-    });
 
-}
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI(option =>
+//     {
+//         var descriptions = app.DescribeApiVersions();
+//         foreach (var desc in descriptions)
+//         {
+//             string url = $"/swagger/{desc.GroupName}/swagger.json";
+//             string name = desc.GroupName.ToUpperInvariant();
+//             option.SwaggerEndpoint(url, name);
+//         }
+//     });
+
+// }
+
+app.UseRamsha();
+
 app.UseHangfireDashboard("/jobs");
 
 

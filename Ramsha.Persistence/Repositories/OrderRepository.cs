@@ -13,18 +13,20 @@ using Ramsha.Application.Dtos.Orders;
 using Ramsha.Application.Wrappers;
 using Ramsha.Application.Extensions;
 using Ramsha.Persistence.Helpers;
+using Ramsha.EntityFrameworkCore;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class OrderRepository(ApplicationDbContext context)
- : GenericRepository<Order, OrderId>(context),
+public class OrderRepository
+ : EFCoreRepository<ApplicationDbContext, Order, OrderId>,
  IOrderRepository
 {
-    private readonly DbSet<Order> _orders = context.Set<Order>();
 
     public async Task<IEnumerable<Order>> FindOrdersWithDetails(Expression<Func<Order, bool>> criteria)
     {
-        return await _orders
+        var context = await GetDbContextAsync();
+
+        return await context.Orders
         .Include(x => x.OrderItems)
         .ThenInclude(x => x.ItemOrdered)
         .Where(criteria).ToListAsync();
@@ -32,7 +34,9 @@ public class OrderRepository(ApplicationDbContext context)
 
     public async Task<Order?> FindOrderWithDetails(Expression<Func<Order, bool>> criteria)
     {
-        return await _orders
+        var context = await GetDbContextAsync();
+
+        return await context.Orders
         .Include(x => x.OrderItems)
         .ThenInclude(x => x.ItemOrdered)
         .FirstOrDefaultAsync(criteria);
@@ -40,7 +44,9 @@ public class OrderRepository(ApplicationDbContext context)
 
     public async Task<PaginationResponseDto<OrderDto>> GetPaged(PagedParams pagedParams, Expression<Func<Order, bool>>? criteria = null)
     {
-        var ordersQuery = _orders.AsQueryable();
+        var context = await GetDbContextAsync();
+
+        var ordersQuery = context.Orders.AsQueryable();
 
         if (criteria is not null)
             ordersQuery = ordersQuery.Where(criteria);
@@ -62,9 +68,14 @@ public class OrderRepository(ApplicationDbContext context)
             ordersQuery = ordersQuery.FilterByColumn(filterColumn);
         }
 
-        return await Paged(
-          ordersQuery.Select(s => s.AsDto()),
-          pagedParams.PaginationParams
-          );
+        var count = await ordersQuery.CountAsync();
+        var paginationParams = pagedParams.PaginationParams;
+        var pagedResult = await ordersQuery
+        .Select(p => p.AsDto())
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return new(pagedResult, paginationParams, count);
     }
 }

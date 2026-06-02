@@ -8,17 +8,19 @@ using Ramsha.Application.DTOs.Common;
 using Ramsha.Domain.Products.Entities;
 using Ramsha.Application.Wrappers;
 using Ramsha.Application.Contracts;
+using Ramsha.EntityFrameworkCore;
 
 
 namespace Ramsha.Persistence.Repositories;
-public class SupplierRepository(ApplicationDbContext context, IAuthenticatedUserService authenticatedUserService) : GenericRepository<Supplier, SupplierId>(context), ISupplierRepository
+
+public class SupplierRepository
+: EFCoreRepository<ApplicationDbContext, Supplier, SupplierId>, ISupplierRepository
 {
-	private readonly DbSet<Supplier> _suppliers = context.Set<Supplier>();
-	private readonly DbSet<SupplierProduct> _supplierProducts = context.Set<SupplierProduct>();
 
 	public async Task<Supplier?> FindByUsername(string username)
 	{
-		return await _suppliers.Include(x => x.Supplies).FirstOrDefaultAsync(x => x.Username == username);
+		var context = await GetDbContextAsync();
+		return await context.Suppliers.Include(x => x.Supplies).FirstOrDefaultAsync(x => x.Username == username);
 	}
 
 }

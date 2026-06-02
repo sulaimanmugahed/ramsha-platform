@@ -6,18 +6,18 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Queries.GetCategories;
 
 public class GetCategoriesQueryHandler(
     ICategoryRepository categoryRepository
-) : IRequestHandler<GetCategoriesQuery, BaseResult<List<CategoryDto>>>
+) : RamshaQueryHandler<GetCategoriesQuery>
 {
-    public async Task<BaseResult<List<CategoryDto>>> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetCategoriesQuery request, CancellationToken cancellationToken)
     {
         var result = await categoryRepository.GetMainCategories();
 
-        return result.Select(x=> x.AsCategoryDto()).ToList();
+        return Success(result.Select(x => x.AsCategoryDto()).ToList());
     }
 }

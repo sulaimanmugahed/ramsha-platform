@@ -10,21 +10,24 @@ using Ramsha.Persistence.Contexts;
 using Ramsha.Application.Dtos.Catalog;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Dtos.Statistics;
+using Ramsha.EntityFrameworkCore;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class CategoryRepository(ApplicationDbContext context) : GenericRepository<Category, CategoryId>(context), ICategoryRepository
+public class CategoryRepository
+: EFCoreRepository<ApplicationDbContext, Category, CategoryId>, ICategoryRepository
 {
-    private DbSet<Category> _categories = context.Set<Category>();
 
     public async Task<List<Category>> GetMainCategories()
     {
-        return await _categories.Where(c => c.ParentCategoryId == null).Include(x => x.SubCategories).ToListAsync();
+        var dbContext = await GetDbContextAsync();
+        return await dbContext.Categories.Where(c => c.ParentCategoryId == null).Include(x => x.SubCategories).ToListAsync();
     }
 
     public async Task<List<CategoryId>> GetChildCategoryIds(CategoryId categoryId)
     {
-        var categoryIds = await _categories
+        var dbContext = await GetDbContextAsync();
+        var categoryIds = await dbContext.Categories
             .Where(c => c.Id == categoryId || c.ParentCategoryId == categoryId)
             .Select(c => c.Id)
             .ToListAsync();
@@ -32,39 +35,41 @@ public class CategoryRepository(ApplicationDbContext context) : GenericRepositor
         return categoryIds;
     }
 
-    public Task<List<CatalogCategoryDto>> GetCatalogCategories()
+    public async Task<List<CatalogCategoryDto>> GetCatalogCategories()
     {
-        var categories = _categories
+        var dbContext = await GetDbContextAsync();
+        var categories = dbContext.Categories
         .Include(x => x.SubCategories)
         .Include(x => x.Products)
         .AsQueryable();
-        return categories.Select(x => x.AsCatalogCategoryDto()).ToListAsync();
+        return await categories.Select(x => x.AsCatalogCategoryDto()).ToListAsync();
     }
 
-   public async Task<List<TotalCategoryProducts>> GetTotalMainCategoriesProducts()
-{
-    var categories = await _categories
-        .Include(x => x.SubCategories)
-        .Include(x => x.Products)
-        .Where(x => x.ParentCategoryId == null)
-        .ToListAsync();
-
-    var result = categories
-        .Select(x => new TotalCategoryProducts(x.Name,GetTotalProductCount(x)))
-        .ToList();
-
-    return result;
-}
-
-private int GetTotalProductCount(Category category)
-{
-    int totalCount = category.Products.Count;
-
-    foreach (var subCategory in category.SubCategories)
+    public async Task<List<TotalCategoryProducts>> GetTotalMainCategoriesProducts()
     {
-        totalCount += GetTotalProductCount(subCategory);
+        var dbContext = await GetDbContextAsync();
+        var categories = await dbContext.Categories
+            .Include(x => x.SubCategories)
+            .Include(x => x.Products)
+            .Where(x => x.ParentCategoryId == null)
+            .ToListAsync();
+
+        var result = categories
+            .Select(x => new TotalCategoryProducts(x.Name, GetTotalProductCount(x)))
+            .ToList();
+
+        return result;
     }
 
-    return totalCount;
-}
+    private int GetTotalProductCount(Category category)
+    {
+        int totalCount = category.Products.Count;
+
+        foreach (var subCategory in category.SubCategories)
+        {
+            totalCount += GetTotalProductCount(subCategory);
+        }
+
+        return totalCount;
+    }
 }

@@ -1,4 +1,4 @@
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.BackgroundJobs;
 using Ramsha.Application.Contracts.Caching;
@@ -7,22 +7,22 @@ using Ramsha.Application.Extensions;
 using Ramsha.Application.Services;
 using Ramsha.Application.Wrappers;
 using Ramsha.Domain.Products.Entities;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Products.Commands.UpdateProduct;
 
 public class UpdateProductCommandHandler(
     IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
     IBrandRepository brandRepository,
     ICategoryRepository categoryRepository,
     ITagRepository tagRepository
-) : IRequestHandler<UpdateProductCommand, BaseResult>
+) : RamshaCommandHandler<UpdateProductCommand>
 {
-    public async Task<BaseResult> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(UpdateProductCommand request, CancellationToken cancellationToken)
     {
         var productToEdit = await productRepository.GetProductDetails(new Domain.Products.ProductId(request.ProductId));
         if (productToEdit is null)
-            return new Error(ErrorCode.RequestedDataNotExist);
+            return Invalid(message: "no product was found");
 
         var basicData = request.ProductBasicCommand;
         var additionalData = request.ProductAdditionalCommand;
@@ -34,17 +34,17 @@ public class UpdateProductCommandHandler(
 
             if (basicData.Brand.HasValue)
             {
-                var brand = await brandRepository.GetByIdAsync(new Domain.Products.BrandId(basicData.Brand.Value));
+                var brand = await brandRepository.FindAsync(new Domain.Products.BrandId(basicData.Brand.Value));
                 if (brand is null)
-                    return new Error(ErrorCode.RequestedDataNotExist, nameof(basicData.Brand));
+                    return Invalid(message: "no brand was found");
                 productToEdit.SetBrand(brand.Id);
             }
 
             if (basicData.Category.HasValue)
             {
-                var category = await categoryRepository.GetByIdAsync(new Domain.Products.CategoryId(basicData.Category.Value));
+                var category = await categoryRepository.FindAsync(new Domain.Products.CategoryId(basicData.Category.Value));
                 if (category is null)
-                    return new Error(ErrorCode.RequestedDataNotExist, nameof(basicData.Category));
+                    return Invalid(message: "no category was found");
                 productToEdit.SetCategory(category.Id);
             }
 
@@ -63,12 +63,11 @@ public class UpdateProductCommandHandler(
             {
                 foreach (var tag in additionalData.TagsToAdd!)
                 {
-                    var existTag = await tagRepository.GetAsync(x => x.Name.ToLower() == tag.ToLower());
+                    var existTag = await tagRepository.FindAsync(x => x.Name.ToLower() == tag.ToLower());
                     if (existTag is null)
                     {
                         existTag = Tag.Create(tag);
-                        await tagRepository.AddAsync(existTag);
-                        await unitOfWork.SaveChangesAsync();
+                        await tagRepository.AddAsync(existTag, true);
                     }
                     productToEdit.AddTag(existTag);
                 }
@@ -81,9 +80,6 @@ public class UpdateProductCommandHandler(
         }
         productToEdit.Update();
 
-        await unitOfWork.SaveChangesAsync();
-
-
-        return BaseResult.Ok();
+        return Success();
     }
 }

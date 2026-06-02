@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+
 using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.BackgroundJobs;
 using Ramsha.Application.Contracts.Caching;
@@ -10,7 +6,9 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Statistics;
 using Ramsha.Application.Helpers;
 using Ramsha.Application.Wrappers;
+using Ramsha.Caching;
 using Ramsha.Domain.Inventory.Enums;
+using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Statistics.Queries.GetSupplierStatistics;
 
@@ -19,55 +17,57 @@ public class GetSupplierStatisticsQueryHandler(
     IFulfillmentRequestRepository fulfillmentRequestRepository,
     IInventoryItemRepository inventoryItemRepository,
     IAuthenticatedUserService authenticatedUserService,
-    ICacheService cacheService,
-    IBackgroundJobService backgroundJobService
-) : IRequestHandler<GetSupplierStatisticsQuery, BaseResult<SupplierStatistics>>
+    IRamshaCache cacheService
+) : RamshaQueryHandler<GetSupplierStatisticsQuery>
 {
-    public async Task<BaseResult<SupplierStatistics>> Handle(GetSupplierStatisticsQuery request, CancellationToken cancellationToken)
+    public override async Task<IRamshaResult> HandleAsync(GetSupplierStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var supplier = await supplierRepository.GetAsync(x => x.Username == authenticatedUserService.UserName);
+        var supplier = await supplierRepository.FindAsync(x => x.Username == authenticatedUserService.UserName);
         if (supplier is null)
-            return new Error(ErrorCode.ErrorInIdentity);
+            return Unauthenticated();
 
         var key = CacheKeysHelper.StatisticsCacheKeys.GetSupplierStatisticsKey(supplier.Id.Value.ToString());
 
-        var supplierStatistics = await cacheService.GetObject<SupplierStatistics>(key);
-        if (supplierStatistics is null)
-        {
-            var fulfillments = await fulfillmentRequestRepository.GetAllAsync(x => x.SupplierId == supplier.Id);
-            var items = await inventoryItemRepository.GetAllAsync(x => x.SupplierId == supplier.Id);
+        var supplierStatistics = await cacheService.GetOrCreateAsync<SupplierStatistics>(
+            key,
+            async (ct) =>
+            {
+                var fulfillments = await fulfillmentRequestRepository.GetListAsync(x => x.SupplierId == supplier.Id);
+                var items = await inventoryItemRepository.GetListAsync(x => x.SupplierId == supplier.Id);
 
 
-            var salesPerformance = fulfillments
-              .GroupBy(o => new { o.Created.Month, o.Created.Year })
-              .Select(g => new SalesPerformance
-              (new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM"),
-                   g.Sum(o => o.BaseRevenue)
-              ))
-              .OrderBy(g => g.Month)
-              .ToList();
+                var salesPerformance = fulfillments
+                  .GroupBy(o => new { o.Created.Month, o.Created.Year })
+                  .Select(g => new SalesPerformance
+                  (new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM"),
+                       g.Sum(o => o.BaseRevenue)
+                  ))
+                  .OrderBy(g => g.Month)
+                  .ToList();
 
-            var topItemSale = await inventoryItemRepository.MaxBy(x => x.TotalSales);
+                var topItemSale = await inventoryItemRepository.MaxBy(x => x.TotalSales);
 
-            supplierStatistics = new SupplierStatistics(
-                fulfillments.Count,
-                items.Count,
-                fulfillments.Sum(x => x.BaseRevenue),
-                topItemSale?.ProductName,
+                return new SupplierStatistics(
+                    fulfillments.Count,
+                    items.Count,
+                    fulfillments.Sum(x => x.BaseRevenue),
+                    topItemSale?.ProductName,
 
-                [
-                    new (InventoryStatus.InStock.ToString(),items.Count(x=> x.Status == InventoryStatus.InStock)),
+                    [
+                        new (InventoryStatus.InStock.ToString(),items.Count(x=> x.Status == InventoryStatus.InStock)),
                 new (InventoryStatus.OutOfStock.ToString(),items.Count(x=> x.Status == InventoryStatus.OutOfStock)),
                 new (InventoryStatus.PendingRestock.ToString(),items.Count(x=> x.Status == InventoryStatus.PendingRestock)),
-                ],
-                salesPerformance
-            );
+                    ],
+                    salesPerformance
+                );
+            },
+            new RamshaCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(10)
+            }, [CacheKeysHelper.ProductCacheKeys.Tag, CacheKeysHelper.InventoryCacheKeys.Tag]);
 
-            backgroundJobService.Enqueue(() => cacheService.SetObject(key, supplierStatistics, TimeSpan.FromMinutes(10)));
 
-        }
-
-        return supplierStatistics;
+        return Success(supplierStatistics);
 
     }
 }

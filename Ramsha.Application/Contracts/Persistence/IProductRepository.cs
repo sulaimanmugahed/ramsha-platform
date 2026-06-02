@@ -3,11 +3,13 @@ using Ramsha.Application.Dtos.Catalog;
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.DTOs.Common;
 using Ramsha.Application.Wrappers;
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Products;
 using Ramsha.Domain.Products.Entities;
 
 namespace Ramsha.Application.Contracts.Persistence;
-public interface IProductRepository : IGenericRepository<Product, ProductId>
+
+public interface IProductRepository : IRepository<Product, ProductId>
 {
     Task<Product?> GetProductWithOptions(ProductId productId);
     Task<Product?> GetProductWithVariantsAndOptions(ProductId productId);
@@ -15,7 +17,7 @@ public interface IProductRepository : IGenericRepository<Product, ProductId>
     Task<ProductVariant?> GetDefaultVariant(ProductId productId);
     Task<ProductVariantSelectionDto?> GetProductVariantSelection(ProductId productId, bool isCatalog = false);
 
-    Task<PaginationResponseDto<ProductDto>> GetProductsPaged(PaginationParams paginationParams, FilterParams? filterParams = null, SortingParams? sortingParams = null);
+    Task<PaginationResponseDto<ProductDto>> GetProductsPaged(Ramsha.Application.Wrappers.PaginationParams paginationParams, FilterParams? filterParams = null, SortingParams? sortingParams = null);
     Task<IEnumerable<Product>> GetAllProductsDetails();
     Task<Product?> GetProductDetails(ProductId productId);
     Task<Option?> GetProductOption(ProductId productId, OptionId optionId);

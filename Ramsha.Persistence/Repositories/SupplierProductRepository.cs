@@ -11,17 +11,19 @@ using Ramsha.Domain.Products;
 using Ramsha.Domain.Products.Entities;
 using Ramsha.Domain.Suppliers;
 using Ramsha.Domain.Suppliers.Entities;
+using Ramsha.EntityFrameworkCore;
 using Ramsha.Persistence.Contexts;
 
 namespace Ramsha.Persistence.Repositories;
 
-public class SupplierProductRepository(ApplicationDbContext applicationDbContext) : GenericRepository<SupplierProduct, CompositeKey>(applicationDbContext), ISupplierProductRepository
+public class SupplierProductRepository(ApplicationDbContext applicationDbContext)
+: EFCoreRepository<ApplicationDbContext, SupplierProduct>, ISupplierProductRepository
 {
     private readonly DbSet<SupplierProduct> _supplierProducts = applicationDbContext.Set<SupplierProduct>();
     private readonly DbSet<SupplierVariant> _supplierVariants = applicationDbContext.Set<SupplierVariant>();
 
 
-    public async Task<PaginationResponseDto<SupplierProductDto>> GetPaged(SupplierId supplierId, PaginationParams paginationParams)
+    public async Task<PaginationResponseDto<SupplierProductDto>> GetPaged(SupplierId supplierId, Ramsha.Application.Wrappers.PaginationParams paginationParams)
     {
         var productsQuery = _supplierProducts
         .Include(x => x.SupplierVariants)
@@ -31,16 +33,21 @@ public class SupplierProductRepository(ApplicationDbContext applicationDbContext
        .OrderBy(x => x.Product.Name)
        .AsQueryable();
 
-        return await Paged(
-         productsQuery.Select(p => new SupplierProductDto(
+        var count = await productsQuery.CountAsync();
+        var pagedResult = await productsQuery
+        .Select(p => new SupplierProductDto(
             p.ProductId.Value,
             p.Product.Name,
             p.Product.Category.Name,
             p.Product.Description,
             p.Product.ImageUrl,
-            p.SupplierVariants.Count)),
-            paginationParams
-         );
+            p.SupplierVariants.Count))
+
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return new(pagedResult, paginationParams, count);
     }
 
     public async Task<SupplierVariant?> GetVariant(SupplierId supplierId, ProductId productId, ProductVariantId productVariantId)
@@ -48,7 +55,7 @@ public class SupplierProductRepository(ApplicationDbContext applicationDbContext
         return await _supplierVariants
        .FindAsync(supplierId, productId, productVariantId);
     }
-    
+
     public async Task<SupplierVariant?> GetVariantDetail(SupplierId supplierId, ProductId productId, ProductVariantId productVariantId)
     {
         return await _supplierVariants

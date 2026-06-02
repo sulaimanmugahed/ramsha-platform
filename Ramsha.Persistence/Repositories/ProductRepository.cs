@@ -16,12 +16,14 @@ using Ramsha.Domain.Common;
 using Microsoft.Extensions.Options;
 using Ramsha.Domain.Settings;
 using System.Linq.Expressions;
+using Ramsha.EntityFrameworkCore;
 
 
 
 namespace Ramsha.Persistence.Repositories;
+
 public class ProductRepository(ApplicationDbContext context, IOptionsSnapshot<GlobalAppSettings> settings)
-    : GenericRepository<Product, ProductId>(context),
+    : EFCoreRepository<ApplicationDbContext, Product, ProductId>,
     IProductRepository
 {
    private readonly DbSet<Product> _product = context.Set<Product>();
@@ -241,7 +243,7 @@ public class ProductRepository(ApplicationDbContext context, IOptionsSnapshot<Gl
       var sortingParams = pagedParams.SortingParams;
       productsQuery = sortingParams is not null && sortingParams.ColumnsSort.Count > 0
        ? productsQuery.OrderByColumnName(sortingParams.ColumnsSort)
-       : productsQuery.OrderBy(x => x.Created);
+       : productsQuery.OrderBy(x => x.CreationDate);
 
 
       if (criteria is not null)
@@ -278,16 +280,21 @@ public class ProductRepository(ApplicationDbContext context, IOptionsSnapshot<Gl
          }
       }
 
-      return await Paged(
-       productsQuery.Select(p => p.AsProductCatalogDto()),
-       pagedParams.PaginationParams
-       );
+      var count = await productsQuery.CountAsync();
+      var paginationParams = pagedParams.PaginationParams;
+      var pagedResult = await productsQuery
+      .Select(p => p.AsProductCatalogDto())
+          .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+          .Take(paginationParams.PageSize)
+          .ToListAsync();
+
+      return new(pagedResult, paginationParams, count);
    }
 
 
 
 
-   public async Task<PaginationResponseDto<ProductDto>> GetProductsPaged(PaginationParams paginationParams, FilterParams? filterParams = null, SortingParams? sortingParams = null)
+   public async Task<PaginationResponseDto<ProductDto>> GetProductsPaged(Ramsha.Application.Wrappers.PaginationParams paginationParams, FilterParams? filterParams = null, SortingParams? sortingParams = null)
    {
       var productsQuery = _product
       .Include(p => p.Category)
@@ -297,7 +304,7 @@ public class ProductRepository(ApplicationDbContext context, IOptionsSnapshot<Gl
 
       productsQuery = sortingParams is not null && sortingParams.ColumnsSort.Count > 0
        ? productsQuery.OrderByColumnName(sortingParams.ColumnsSort)
-       : productsQuery.OrderBy(x => x.Created);
+       : productsQuery.OrderBy(x => x.CreationDate);
 
       if (filterParams is not null)
       {
@@ -317,10 +324,14 @@ public class ProductRepository(ApplicationDbContext context, IOptionsSnapshot<Gl
          }
       }
 
-      return await Paged(
-        productsQuery.Select(p => p.AsDto()),
-        paginationParams
-        );
+      var count = await productsQuery.CountAsync();
+      var pagedResult = await productsQuery
+      .Select(p => p.AsDto())
+          .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+          .Take(paginationParams.PageSize)
+          .ToListAsync();
+
+      return new(pagedResult, paginationParams, count);
    }
 
    private async Task<List<CategoryId>> GetChildCategoryIds(List<CategoryId> categoryIds)

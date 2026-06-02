@@ -1,13 +1,13 @@
 
 
 using System.Runtime.InteropServices;
+using Ramsha.Common.Domain;
 using Ramsha.Domain.Common;
 
 namespace Ramsha.Domain.Products.Entities;
 
-public class Option : BaseEntity
+public class Option : Entity<OptionId>
 {
-    public OptionId Id { get; set; }
     public string Name { get; set; }
     public List<OptionValue> OptionValues { get; set; } = [];
 

@@ -1,11 +1,11 @@
 
 using Ramsha.Application.Dtos.Products;
 using Ramsha.Application.Wrappers;
-using MediatR;
+using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Products.Queries.GetCategories;
 
-public class GetCategoriesQuery:IRequest<BaseResult<List<CategoryDto>>>
+public class GetCategoriesQuery : IRamshaQuery
 {
-    
+
 }
