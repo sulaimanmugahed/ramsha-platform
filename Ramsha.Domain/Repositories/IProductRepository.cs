@@ -1,0 +1,36 @@
+﻿using System.Linq.Expressions;
+
+using Ramsha.Common.Domain;
+using Ramsha.Domain.Products;
+using Ramsha.Domain.Products.Entities;
+
+namespace Ramsha.Domain.Repositories;
+
+public interface IProductRepository : IRepository<Product, ProductId>
+{
+    Task<Product?> GetProductWithOptions(ProductId productId);
+    Task<Product?> GetProductWithVariantsAndOptions(ProductId productId);
+    Task<CatalogVariantDto?> GetCatalogProductVariant(ProductId productId, ProductVariantId? productVariantId = null);
+    Task<ProductVariant?> GetDefaultVariant(ProductId productId);
+    Task<ProductVariantSelectionDto?> GetProductVariantSelection(ProductId productId, bool isCatalog = false);
+
+    // Task<PaginationResponseDto<ProductDto>> GetProductsPaged(Ramsha.Application.Wrappers.PaginationParams paginationParams, FilterParams? filterParams = null, SortingParams? sortingParams = null);
+    Task<IEnumerable<Product>> GetAllProductsDetails();
+    Task<Product?> GetProductDetails(ProductId productId);
+    Task<Option?> GetProductOption(ProductId productId, OptionId optionId);
+    Task<ProductVariant?> GetProductVariant(ProductId productId, ProductVariantId productVariantId);
+    Task<ProductVariant?> GetVariantDetails(ProductId productId, ProductVariantId productVariantId);
+    Task<IEnumerable<ProductVariant?>> GetVariantsDetails(ProductId productId);
+    Task<bool> IsOptionExist(OptionId optionId);
+    Task<IEnumerable<ProductVariant?>> GetVariants(ProductId productId);
+
+    Task RemoveRange(List<ProductId> productIds);
+
+    Task RemoveVariant(ProductVariant variant);
+    Task<List<ProductOption>> GetProductOptions(ProductId productId);
+    //Task<PaginationResponseDto<CatalogProductDto>> GetCatalogProductsPaged(PagedParams pagedParams, Expression<Func<Product, bool>>? criteria = null);
+    Task<ProductVariant?> GetVariant(ProductId productId, ProductVariantId productVariantId);
+
+    Task<CatalogProductDetailDto?> GetProductCatalogDetail(ProductId productId);
+
+}

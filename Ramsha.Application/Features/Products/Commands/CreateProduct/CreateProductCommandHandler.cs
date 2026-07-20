@@ -9,6 +9,8 @@ using Ramsha.Application.Helpers;
 using Ramsha.Application.Services;
 using Ramsha.Caching;
 using Ramsha.LocalMessaging;
+using Ramsha.Domain.Repositories;
+using Ramsha.Contracts;
 
 namespace Ramsha.Application.Features.Products.Commands.CreateProduct;
 
@@ -17,7 +19,7 @@ public class CreateProductCommandHandler(
     IProductRepository productRepository,
     ITagRepository tagRepository,
     IBrandRepository brandRepository,
-    IVariantService variantService,
+    VariantService variantService,
     IOptionRepository optionRepository,
     ICodeGenerator codeGenerator,
     IRamshaCache cacheService,

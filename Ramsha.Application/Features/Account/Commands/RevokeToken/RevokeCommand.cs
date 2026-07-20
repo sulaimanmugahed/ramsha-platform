@@ -1,10 +1,10 @@
-﻿using Ramsha.Application.Wrappers;
-using Ramsha.LocalMessaging.Abstractions;
+﻿// using Ramsha.Application.Wrappers;
+// using Ramsha.LocalMessaging.Abstractions;
 
 
-namespace Ramsha.Application.Features.Account.Commands.RevokeToken;
+// namespace Ramsha.Application.Features.Account.Commands.RevokeToken;
 
-public class RevokeCommand : IRamshaCommand
-{
+// public class RevokeCommand : IRamshaCommand
+// {
 
-}
+// }

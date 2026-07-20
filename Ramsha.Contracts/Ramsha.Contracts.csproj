@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Ramsha.Shared/Ramsha.Shared.csproj" />
+
+     <PackageReference Include="Ramsha.Common.Contracts" Version="26.6.1" />
+  </ItemGroup>
+
+</Project>

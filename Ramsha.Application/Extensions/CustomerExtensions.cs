@@ -10,25 +10,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Ramsha.Application.Extensions;
+
 public static class CustomerExtensions
 {
-	public static AuthenticatedCustomerDto AsAuthCustomerDto(this AuthenticationResult authenticationResult, Basket? basket)
-	{
-		return new AuthenticatedCustomerDto
-		{
-			AccessToken = authenticationResult.AccessToken,
-			IsVerified = authenticationResult.IsVerified,
-			Email = authenticationResult.Email,
-			Username = authenticationResult.Username,
-			Role = authenticationResult.Role,
-			RefreshTokenExpiration = authenticationResult.RefreshTokenExpiration,
-			Basket = basket?.ToDto(),
-			Address = authenticationResult.Address,
-			PreferredCurrency = authenticationResult.PreferredCurrency
 
-		};
-
-	}
 
 
 	public static CustomerDto AsDto(this Customer customer) =>

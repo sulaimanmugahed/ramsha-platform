@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Ramsha.Application.Contracts;
+using Ramsha.Contracts;
 
 namespace Ramsha.Application.Services
 {

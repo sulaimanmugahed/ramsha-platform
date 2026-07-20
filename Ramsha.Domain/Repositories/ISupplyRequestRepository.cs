@@ -1,0 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using Ramsha.Common.Domain;
+using Ramsha.Domain.Suppliers;
+using Ramsha.Domain.Suppliers.Entities;
+
+namespace Ramsha.Domain.Repositories;
+
+public interface ISupplyRequestRepository : IRepository<SupplyRequest, SupplyRequestId>
+{
+    Task<IEnumerable<SupplyRequest>> FindAllWithDetail(Expression<Func<SupplyRequest, bool>> criteria);
+    Task<SupplyRequest?> GetWithDetails(Expression<Func<SupplyRequest, bool>> criteria);
+
+}

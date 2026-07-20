@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Ramsha.Application.Contracts.Identity.UserInterfaces;
+
 using Ramsha.Application.Dtos.Admins;
-using Ramsha.Application.Wrappers;
-using Ramsha.Domain.Constants;
+using Ramsha.Application.Services.Identity.UserInterfaces;
 using Ramsha.LocalMessaging;
+using Ramsha.Shared;
 
 namespace Ramsha.Application.Features.Admin.Queries.GetAdmins;
 

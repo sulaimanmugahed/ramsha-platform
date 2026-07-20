@@ -1,13 +1,16 @@
 using Ramsha.Application.Contracts;
-using Ramsha.Application.Contracts.Identity.UserInterfaces;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Baskets;
 using Ramsha.Application.Dtos.Common;
+using Ramsha.Application.Services.Identity.UserInterfaces;
+using Ramsha.Contracts;
 using Ramsha.Domain.Baskets.Entities;
 using Ramsha.Domain.Common;
 using Ramsha.Domain.Customers.Entities;
+using Ramsha.Domain.Repositories;
 
 namespace Ramsha.Application.Services;
+
 
 public class BasketService(
 IBasketRepository basketRepository,

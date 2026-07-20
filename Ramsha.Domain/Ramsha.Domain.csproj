@@ -10,4 +10,8 @@
     <PackageReference Include="Ramsha.Common.Domain" Version="26.6.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../Ramsha.Shared/Ramsha.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -12,10 +12,8 @@ using Ramsha.Domain.Products.Entities;
 
 namespace Ramsha.Application.Services;
 
-public class VariantService : IVariantService
+public class VariantService
 {
-
-
 
     public bool IsVariantExists(List<ProductVariant> existingVariants, List<VariantValuesCommand> variantValues)
     {

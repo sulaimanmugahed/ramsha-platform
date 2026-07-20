@@ -4,7 +4,7 @@ using Ramsha.LocalMessaging.Abstractions;
 
 namespace Ramsha.Application.Features.Baskets.Queries.GetBasket;
 
-public class GetBasketQuery : IRamshaQuery
+public class GetBasketQuery : IRamshaQuery<RamshaResult<BasketDto?>>
 {
-
+    public string Buyer { get; set; }
 }

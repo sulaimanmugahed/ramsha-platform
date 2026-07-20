@@ -8,17 +8,18 @@ using Ramsha.Domain.Products.Entities;
 
 using Ramsha.Application.Contracts.BackgroundJobs;
 using Ramsha.Application.Services;
-using Ramsha.Application.Contracts.Caching;
 using Ramsha.Application.Helpers;
 using Ramsha.Caching;
 using Ramsha.LocalMessaging;
+using Ramsha.Domain.Repositories;
+using Ramsha.Contracts;
 
 namespace Ramsha.Application.Features.Products.Commands.AddProductVariant;
 
 public class AddProductVariantCommandHandler(
     IProductRepository productRepository,
     IOptionRepository optionRepository,
-    IVariantService variantService,
+    VariantService variantService,
     ICodeGenerator codeGenerator,
     IBackgroundJobService backgroundJobService,
    IRamshaCache cacheService

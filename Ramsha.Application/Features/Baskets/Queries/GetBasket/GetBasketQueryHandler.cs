@@ -3,30 +3,21 @@ using Ramsha.Application.Contracts;
 using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Baskets;
 using Ramsha.Application.Extensions;
+using Ramsha.Application.Services;
 using Ramsha.Application.Wrappers;
+using Ramsha.Contracts;
+using Ramsha.Domain.Repositories;
 using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Baskets.Queries.GetBasket;
 
 public class GetBasketQueryHandler(
-	IAuthenticatedUserService authenticatedUser,
-	ICookieService cookieService,
 	IBasketRepository basketRepository)
-	: RamshaQueryHandler<GetBasketQuery>
+	: RamshaQueryHandler<GetBasketQuery, RamshaResult<BasketDto?>>
 {
-	public override async Task<IRamshaResult> HandleAsync(GetBasketQuery request, CancellationToken cancellationToken)
+	public override async Task<RamshaResult<BasketDto?>> HandleAsync(GetBasketQuery request, CancellationToken cancellationToken)
 	{
-		var buyer = authenticatedUser.UserName ?? cookieService.GetCookieValue(ApplicationCookies.Buyer);
-
-		if (buyer is null)
-		{
-			cookieService.RemoveCookie(ApplicationCookies.Buyer);
-			return NotFound();
-		}
-
-		var basket = await basketRepository.FindByBuyer(buyer);
-
-
-		return Success(basket?.ToDto());
+		var basket = await basketRepository.FindByBuyer(request.Buyer);
+		return RamshaResults.Success(basket?.ToDto());
 	}
 }

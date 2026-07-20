@@ -4,8 +4,9 @@ using Ramsha.Application.Contracts.Persistence;
 using Ramsha.Application.Dtos.Baskets;
 using Ramsha.Application.Extensions;
 using Ramsha.Application.Wrappers;
+using Ramsha.Contracts;
 using Ramsha.Domain.Customers.Entities;
-
+using Ramsha.Domain.Repositories;
 using Ramsha.LocalMessaging;
 
 namespace Ramsha.Application.Features.Baskets.Commands.AddItem;
@@ -13,44 +14,44 @@ namespace Ramsha.Application.Features.Baskets.Commands.AddItem;
 internal class AddItemToBasketCommandHandler(
 	IInventoryItemRepository inventoryItemRepository,
 	IBasketRepository basketRepository,
-	IAuthenticatedUserService authenticatedUser,
-	ICookieService cookieService)
-	: RamshaCommandHandler<AddItemToBasketCommand>
+	IAuthenticatedUserService authenticatedUser)
+	: RamshaCommandHandler<AddItemToBasketCommand, RamshaResult<AddItemToBasketResponse>>
 {
-	public override async Task<IRamshaResult> HandleAsync(AddItemToBasketCommand request, CancellationToken cancellationToken)
+	public override async Task<RamshaResult<AddItemToBasketResponse>> HandleAsync(AddItemToBasketCommand request, CancellationToken cancellationToken)
 	{
 		var inventoryItem = await inventoryItemRepository
-		.FindAsync(x => x.Id == new Domain.Inventory.InventoryItemId(request.InventoryItemId));
+		.FindAsync(x => x.Id == new Domain.Inventory.InventoryItemId(request.Input.InventoryItemId));
 
 		if (inventoryItem is null)
-			return NotFound();
+			return RamshaResults.NotFound();
 
-		var buyer = authenticatedUser.UserName ?? cookieService.GetCookieValue(ApplicationCookies.Buyer);
+		var buyer = request.Buyer;
 
 		var basket = await basketRepository.FindByBuyer(buyer);
 
+		var response = new AddItemToBasketResponse();
+
 		if (basket is null)
 		{
+			response.IsNewBasket = true;
 			if (string.IsNullOrEmpty(buyer))
 			{
-				buyer = Guid.NewGuid().ToString();
 
-				cookieService.SetCookieValue(
-					ApplicationCookies.Buyer,
-					buyer,
-					new()
-					{
-						IsEssential = true,
-						Expires = DateTime.UtcNow.AddDays(30)
-					});
+				buyer = Guid.NewGuid().ToString();
+				response.IsAnonBuyer = true;
+
 			}
 			var newBasket = Basket.Create(buyer);
 			await basketRepository.AddAsync(newBasket, true);
 			basket = newBasket;
 		}
 
-		var basketItem = basket.AddItem(inventoryItem, request.Quantity);
+		response.Buyer = buyer;
 
-		return Success(basketItem.AsItemDto());
+		var basketItem = basket.AddItem(inventoryItem, request.Input.Quantity);
+
+		response.Item = basketItem.AsItemDto();
+
+		return RamshaResults.Success(response);
 	}
 }

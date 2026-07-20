@@ -31,7 +31,7 @@ namespace Ramsha.Application
         public override void BuildServices(BuildServicesContext context)
         {
             base.BuildServices(context);
-            context.Services.AddApplicationLayer(context.Configuration);
+            context.Services.AddApplicationServices(context.Configuration);
         }
     }
 }

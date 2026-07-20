@@ -3,6 +3,7 @@ using Ramsha.Domain.Baskets.Entities;
 using Ramsha.Domain.Customers.Entities;
 
 namespace Ramsha.Application.Extensions;
+
 public static class BasketExtensions
 {
 
@@ -22,6 +23,7 @@ public static class BasketExtensions
 
 	public static BasketDto ToDto(this Basket basket)
 		=> new(
+			basket.Id.Value,
 			basket.Items.Select(x => x.AsItemDto())
 			.ToList(),
 			basket.Buyer,

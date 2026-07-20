@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Ramsha.Application.Contracts;
 using Ramsha.Domain.Products.Enums;
 using Ramsha.Domain.Common;
+using Ramsha.Contracts;
 
 namespace Ramsha.Persistence.Seeds;
 

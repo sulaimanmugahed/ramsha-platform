@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -64,16 +65,12 @@ public class SupabaseStorageService : IStorageService
         return $"{sanitizedName}_{uniqueId}{extension}";
     }
 
-    public async Task<string?> UploadFile(IFormFile file, string folderPath = null)
+    public async Task<string?> UploadFile(byte[] file, string fileName, string contentType, string folderPath = null)
     {
         try
         {
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
-            var fileBytes = stream.ToArray();
-
             // Sanitize the original filename
-            var sanitizedFileName = SanitizeFileName(file.FileName);
+            var sanitizedFileName = SanitizeFileName(fileName);
 
             // Build the object path
             var objectPath = string.IsNullOrEmpty(folderPath)
@@ -82,9 +79,9 @@ public class SupabaseStorageService : IStorageService
 
             var bucket = _supabaseClient.Storage.From(_bucketName);
 
-            await bucket.Upload(fileBytes, objectPath, new Supabase.Storage.FileOptions
+            await bucket.Upload(file, objectPath, new Supabase.Storage.FileOptions
             {
-                ContentType = file.ContentType,
+                ContentType = contentType,
                 Upsert = false
             });
 
