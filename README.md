@@ -2,7 +2,17 @@
 
 Welcome to Ramsha, a comprehensive e-commerce platform designed to emulate real-world e-commerce operations. This project comprises both the API (built with ASP.NET Core) and the UI (built with React), providing a full-stack solution for developers keen on learning and practicing with real e-commerce applications.
 
+## Project Structure
+A visual map of the solution (with per-folder file counts) is generated from the repository itself:
+
+- `docs/folder-structure.png` — dark-mode tree diagram of all 15 projects and the React UI
+- `docs/folder-structure.md` — the same tree as plain text
+- `docs/render_folder_structure.py` — regenerate both with
+  `python3 docs/render_folder_structure.py --md`
+  (needs ImageMagick plus the `arabic-reshaper` and `python-bidi` packages)
+
 ## Table of Contents
+- [Project Structure](#project-structure)
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [API Overview](#api-overview)
